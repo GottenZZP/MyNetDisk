@@ -1,10 +1,15 @@
 package top.gottenzzp.MyNetDisk.utils;
+import org.apache.commons.lang3.RandomStringUtils;
 import top.gottenzzp.MyNetDisk.exception.BusinessException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 
 public class StringTools {
+
+    public static final String getRandomNumber(Integer count) {
+        return RandomStringUtils.random(count, false, true);
+    }
 
     public static void checkParam(Object param) {
         try {
