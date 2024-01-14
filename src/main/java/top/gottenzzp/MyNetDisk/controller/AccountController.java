@@ -1,5 +1,6 @@
 package top.gottenzzp.MyNetDisk.controller;
 
+import com.sun.javaws.jnl.ResourceVisitor;
 import org.apache.tomcat.util.bcel.Const;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,10 +11,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import top.gottenzzp.MyNetDisk.annotation.GlobalInterceptor;
 import top.gottenzzp.MyNetDisk.annotation.VerifyParam;
+import top.gottenzzp.MyNetDisk.entity.component.RedisComponent;
 import top.gottenzzp.MyNetDisk.entity.config.AppConfig;
 import top.gottenzzp.MyNetDisk.entity.constants.Constants;
 import top.gottenzzp.MyNetDisk.entity.dto.CreateImageCode;
 import top.gottenzzp.MyNetDisk.entity.dto.SessionWebUserDto;
+import top.gottenzzp.MyNetDisk.entity.dto.UserSpaceDto;
 import top.gottenzzp.MyNetDisk.entity.enums.VerifyRegexEnum;
 import top.gottenzzp.MyNetDisk.entity.vo.ResponseVO;
 import top.gottenzzp.MyNetDisk.exception.BusinessException;
@@ -51,6 +54,9 @@ public class AccountController extends ABaseController{
 
 	@Resource
 	private AppConfig appConfig;
+
+	@Resource
+	private RedisComponent redisComponent;
 
 	/**
 	 * 校验码
@@ -236,5 +242,42 @@ public class AccountController extends ABaseController{
 				writer.close();
 			}
 		}
+	}
+
+	/**
+	 * 获取用户信息
+	 * @param session 会话
+	 * @return	{@link ResponseVO}
+	 */
+	@RequestMapping("/getUserInfo")
+	@GlobalInterceptor(checkParams = true)
+	public ResponseVO getUserInfo(HttpSession session) {
+		SessionWebUserDto sessionWebUserDto = getUserInfoFromSession(session);
+		return getSuccessResponseVO(sessionWebUserDto);
+	}
+
+	/**
+	 * 获取用户已使用空间
+	 * @param session 会话
+	 * @return	{@link ResponseVO}
+	 */
+	@RequestMapping("/getUseSpace")
+	@GlobalInterceptor(checkParams = true)
+	public ResponseVO getUseSpace(HttpSession session) {
+		SessionWebUserDto sessionWebUserDto = getUserInfoFromSession(session);
+		UserSpaceDto spaceDto = redisComponent.getUserSpaceUse(sessionWebUserDto.getUserId());
+		return getSuccessResponseVO(spaceDto);
+	}
+
+	/**
+	 * 退出登陆
+	 * @param session 	会话
+	 * @return	{@link ResponseVO}
+	 */
+	@RequestMapping("/logout")
+	@GlobalInterceptor(checkParams = true)
+	public ResponseVO logout(HttpSession session) {
+		session.invalidate();
+		return getSuccessResponseVO(null);
 	}
 }

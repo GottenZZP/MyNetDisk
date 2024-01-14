@@ -3,6 +3,8 @@ import com.mysql.cj.protocol.x.XProtocolRowInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import top.gottenzzp.MyNetDisk.entity.constants.Constants;
+import top.gottenzzp.MyNetDisk.entity.dto.SessionWebUserDto;
 import top.gottenzzp.MyNetDisk.entity.enums.ResponseCodeEnum;
 import top.gottenzzp.MyNetDisk.entity.vo.ResponseVO;
 import top.gottenzzp.MyNetDisk.exception.BusinessException;
@@ -10,6 +12,7 @@ import top.gottenzzp.MyNetDisk.utils.StringTools;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -97,5 +100,11 @@ public class ABaseController {
                 }
             }
         }
+    }
+
+    protected SessionWebUserDto getUserInfoFromSession(HttpSession session) {
+        // 获取session中的用户信息
+        SessionWebUserDto sessionWebUserDto = (SessionWebUserDto) session.getAttribute(Constants.SESSION_KEY);
+        return sessionWebUserDto;
     }
 }
