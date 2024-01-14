@@ -1,11 +1,16 @@
 package top.gottenzzp.MyNetDisk.controller;
 
+import org.apache.tomcat.util.bcel.Const;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import top.gottenzzp.MyNetDisk.annotation.GlobalInterceptor;
 import top.gottenzzp.MyNetDisk.annotation.VerifyParam;
+import top.gottenzzp.MyNetDisk.entity.config.AppConfig;
 import top.gottenzzp.MyNetDisk.entity.constants.Constants;
 import top.gottenzzp.MyNetDisk.entity.dto.CreateImageCode;
 import top.gottenzzp.MyNetDisk.entity.dto.SessionWebUserDto;
@@ -18,7 +23,9 @@ import top.gottenzzp.MyNetDisk.service.UserInfoService;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * 客户控制员
@@ -29,6 +36,9 @@ import java.io.IOException;
  */
 @RestController("userInfoController")
 public class AccountController extends ABaseController{
+	private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
+	private static final String CONTENT_TYPE = "Content-Type";
+	private static final String CONTENT_TYPE_VALUE = "application/json;charset=UTF-8";
 
 	/**
 	 * 用户信息服务
@@ -38,6 +48,9 @@ public class AccountController extends ABaseController{
 
 	@Resource
 	private EmailCodeService emailCodeService;
+
+	@Resource
+	private AppConfig appConfig;
 
 	/**
 	 * 校验码
@@ -49,7 +62,7 @@ public class AccountController extends ABaseController{
 	 * @throws IOException IOEXCEPTION
 	 */
 	@GetMapping("/checkCode")
-	// @GlobalInterceptor(checkParams = true)
+	@GlobalInterceptor(checkParams = true)
 	public void checkCode(HttpServletResponse response, HttpSession session, Integer type) throws IOException {
 		CreateImageCode vCode = new CreateImageCode(130, 38, 5, 10);
 		response.setHeader("Pragma", "no-cache");
@@ -176,11 +189,38 @@ public class AccountController extends ABaseController{
 
 	@RequestMapping("/getAvatar/{userId}")
 	@GlobalInterceptor(checkParams = true)
-	public ResponseVO getAvatar(HttpSession session, @VerifyParam(required = true) @PathVariable("userId") String userId) {
+	public void getAvatar(HttpServletResponse response, @VerifyParam(required = true) @PathVariable("userId") String userId) {
+		String avatarFolderName = Constants.FILE_FOLDER_FILE + Constants.FILE_FOLDER_AVATAR_NAME;
+		File file = new File(appConfig.getProjectFolder() + avatarFolderName);
+		if (!file.exists()) {
+			file.mkdirs();
+		}
+		String avatarPath = appConfig.getProjectFolder() + avatarFolderName + userId + Constants.AVATAR_SUFFIX;
+		File file1 = new File(avatarPath);
+		if (!file1.exists()) {
+			if (!new File(appConfig.getProjectFolder() + avatarFolderName + Constants.AVATAR_DEFAULT).exists()) {
+				printNoDefaultImage(response);
+			}
+			avatarPath = appConfig.getProjectFolder() + avatarFolderName + Constants.AVATAR_DEFAULT;
+		}
+		response.setContentType("image/jpg");
+		readFile(response, avatarPath);
+	}
+
+	private void printNoDefaultImage(HttpServletResponse response) {
+		response.setHeader(CONTENT_TYPE, CONTENT_TYPE_VALUE);
+		response.setStatus(HttpStatus.OK.value());
+		PrintWriter writer = null;
 		try {
-			return getSuccessResponseVO(null);
+			writer = response.getWriter();
+			writer.print("请在头像目录下放置默认头像default.jpg");
+			writer.close();
+		} catch (Exception e) {
+			logger.error("输出无默认图失败", e);
 		} finally {
-			session.removeAttribute(Constants.CHECK_CODE_KEY);
+			if (writer != null) {
+				writer.close();
+			}
 		}
 	}
 }

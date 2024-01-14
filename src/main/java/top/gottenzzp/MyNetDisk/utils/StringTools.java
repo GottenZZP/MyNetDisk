@@ -60,4 +60,11 @@ public class StringTools {
     public static String encodeByMD5(String originString) {
         return isEmpty(originString) ? null : DigestUtils.md5Hex(originString);
     }
+
+    public static boolean pathIsOk(String path) {
+        if (StringTools.isEmpty(path)) {
+            return true;
+        }
+        return !path.contains("../") && !path.contains("..\\");
+    }
 }

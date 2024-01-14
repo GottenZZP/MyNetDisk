@@ -13,4 +13,8 @@ public class Constants {
     public static final Long MB = 1024L * 1024L;
     public static final Integer REDIS_KEY_EXPIRES_DAY = 60 * 60 * 24;
     public static final String SESSION_KEY = "session_key";
+    public static final String FILE_FOLDER_FILE = "/file/";
+    public static final String FILE_FOLDER_AVATAR_NAME = "avatar/";
+    public static final String AVATAR_DEFAULT = "default.jpg";
+    public static final String AVATAR_SUFFIX = ".jpg";
 }
