@@ -9,7 +9,6 @@ import javax.mail.internet.MimeMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -188,6 +187,18 @@ public class EmailCodeServiceImpl implements EmailCodeService {
 		emailCode.setCode(code);
 		emailCode.setCreateTime(new Date());
 		emailCodeMapper.insert(emailCode);
+	}
+
+	@Override
+	public void checkCode(String email, String code) {
+		EmailCode emailCode = emailCodeMapper.selectByEmailAndCode(email, code);
+		if (emailCode == null) {
+			throw new BusinessException("邮箱验证码不正确");
+		}
+		if (emailCode.getStatus() == 1 ||  System.currentTimeMillis() - emailCode.getCreateTime().getTime() > Constants.LENGTH_15 * 1000 * 60) {
+			throw new BusinessException("邮箱验证码已失效");
+		}
+		emailCodeMapper.disableEmailCode(email);
 	}
 
 	private void sendEmail(String toEmail, String code) {

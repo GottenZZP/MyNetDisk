@@ -1,17 +1,30 @@
 package top.gottenzzp.MyNetDisk.service.impl;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.apache.catalina.User;
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Transactional;
+import top.gottenzzp.MyNetDisk.entity.component.RedisComponent;
+import top.gottenzzp.MyNetDisk.entity.config.AppConfig;
+import top.gottenzzp.MyNetDisk.entity.constants.Constants;
+import top.gottenzzp.MyNetDisk.entity.dto.SessionWebUserDto;
+import top.gottenzzp.MyNetDisk.entity.dto.SysSettingsDto;
+import top.gottenzzp.MyNetDisk.entity.dto.UserSpaceDto;
 import top.gottenzzp.MyNetDisk.entity.enums.PageSize;
+import top.gottenzzp.MyNetDisk.entity.enums.UserStatusEnum;
 import top.gottenzzp.MyNetDisk.entity.query.UserInfoQuery;
 import top.gottenzzp.MyNetDisk.entity.po.UserInfo;
 import top.gottenzzp.MyNetDisk.entity.vo.PaginationResultVO;
 import top.gottenzzp.MyNetDisk.entity.query.SimplePage;
+import top.gottenzzp.MyNetDisk.exception.BusinessException;
 import top.gottenzzp.MyNetDisk.mappers.UserInfoMapper;
+import top.gottenzzp.MyNetDisk.service.EmailCodeService;
 import top.gottenzzp.MyNetDisk.service.UserInfoService;
 import top.gottenzzp.MyNetDisk.utils.StringTools;
 
@@ -24,6 +37,15 @@ public class UserInfoServiceImpl implements UserInfoService {
 
 	@Resource
 	private UserInfoMapper<UserInfo, UserInfoQuery> userInfoMapper;
+
+	@Resource
+	private EmailCodeService emailCodeService;
+
+	@Resource
+	private RedisComponent redisComponent;
+
+	@Resource
+	private AppConfig appConfig;
 
 	/**
 	 * 根据条件查询列表
@@ -150,5 +172,87 @@ public class UserInfoServiceImpl implements UserInfoService {
 	@Override
 	public Integer deleteUserInfoByEmailAndQqOpenIdAndNickName(String email, String qqOpenId, String nickName) {
 		return this.userInfoMapper.deleteByEmailAndQqOpenIdAndNickName(email, qqOpenId, nickName);
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public void register(String email, String nickName, String password, String emailCode) {
+		UserInfo userInfo = userInfoMapper.selectByEmail(email);
+		if (userInfo != null) {
+			throw new BusinessException("邮箱账号已存在！");
+		}
+		UserInfo nickNameUser = userInfoMapper.selectByNickName(nickName);
+		if (nickNameUser != null) {
+			throw new BusinessException("昵称已存在！");
+		}
+		// 检验邮箱验证码
+		emailCodeService.checkCode(email, emailCode);
+
+		String userId = StringTools.getRandomNumber(Constants.LENGTH_15);
+		userInfo = new UserInfo();
+		userInfo.setUserId(userId);
+		userInfo.setNickName(nickName);
+		userInfo.setEmail(email);
+		userInfo.setPassword(StringTools.encodeByMD5(password));
+		userInfo.setRegisterTime(new Date());
+		userInfo.setStatus(UserStatusEnum.ENABLE.getStatus());
+		userInfo.setUseSpace(0L);
+		SysSettingsDto sysSettingDto = redisComponent.getSysSettingDto();
+		userInfo.setTotalSpace(sysSettingDto.getUserInitUseSpace() * Constants.MB);
+		userInfoMapper.insert(userInfo);
+	}
+
+	/**
+	 * 使用邮箱登陆账号
+	 * @param email    邮箱
+	 * @param password 密码
+	 * @return	SessionWebUserDto
+	 */
+	@Override
+	public SessionWebUserDto login(String email, String password) {
+		// 检验邮箱是否存在
+		UserInfo userInfo = userInfoMapper.selectByEmail(email);
+		if (userInfo == null || !userInfo.getPassword().equals(password)) {
+			throw new BusinessException("账号或密码错误");
+		}
+		if (UserStatusEnum.DISABLE.getStatus().equals(userInfo.getStatus())) {
+			throw new BusinessException("账号已被禁用");
+		}
+		// 设置最后登陆时间
+		UserInfo updateUserInfo = new UserInfo();
+		updateUserInfo.setLastLoginTime(new Date());
+		userInfoMapper.updateByUserId(updateUserInfo, userInfo.getUserId());
+
+		// 设置session
+		SessionWebUserDto sessionWebUserDto = new SessionWebUserDto();
+		sessionWebUserDto.setUserId(userInfo.getUserId());
+		sessionWebUserDto.setNickName(userInfo.getNickName());
+		if (ArrayUtils.contains(appConfig.getAdminEmails().split(","), email)) {
+			sessionWebUserDto.setIsAdmin(true);
+		} else {
+			sessionWebUserDto.setIsAdmin(false);
+		}
+
+		UserSpaceDto userSpaceDto = new UserSpaceDto();
+		userSpaceDto.setTotalSpace(userInfo.getTotalSpace());
+		// userSpaceDto.setUseSpace(userInfo.getUseSpace());
+		redisComponent.saveUserSpaceUse(userInfo.getUserId(), userSpaceDto);
+
+		return sessionWebUserDto;
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public void resetPwd(String email, String password, String emailCode) {
+		UserInfo userInfo = userInfoMapper.selectByEmail(email);
+		if (userInfo == null) {
+			throw new BusinessException("邮箱账号不存在！");
+		}
+		// 检验邮箱验证码
+		emailCodeService.checkCode(email, emailCode);
+
+		UserInfo updateUserInfo = new UserInfo();
+		updateUserInfo.setPassword(StringTools.encodeByMD5(password));
+		userInfoMapper.updateByEmail(updateUserInfo, email);
 	}
 }

@@ -3,6 +3,7 @@ package top.gottenzzp.MyNetDisk.entity.component;
 import org.springframework.stereotype.Component;
 import top.gottenzzp.MyNetDisk.entity.constants.Constants;
 import top.gottenzzp.MyNetDisk.entity.dto.SysSettingsDto;
+import top.gottenzzp.MyNetDisk.entity.dto.UserSpaceDto;
 
 import javax.annotation.Resource;
 
@@ -22,6 +23,10 @@ public class RedisComponent {
             redisUtils.set(Constants.REDIS_KEY_SYS_SETTINGS, sysSettingsDto);
         }
         return sysSettingsDto;
+    }
+
+    public void saveUserSpaceUse(String userId, UserSpaceDto userSpaceDto) {
+        redisUtils.setex(Constants.REDIS_KEY_USER_SPACE_USE + userId, userSpaceDto, Constants.REDIS_KEY_EXPIRES_DAY);
     }
 
 }

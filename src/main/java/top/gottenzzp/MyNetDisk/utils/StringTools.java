@@ -1,4 +1,5 @@
 package top.gottenzzp.MyNetDisk.utils;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import top.gottenzzp.MyNetDisk.exception.BusinessException;
 import java.lang.reflect.Field;
@@ -54,5 +55,9 @@ public class StringTools {
             return true;
         }
         return false;
+    }
+
+    public static String encodeByMD5(String originString) {
+        return isEmpty(originString) ? null : DigestUtils.md5Hex(originString);
     }
 }

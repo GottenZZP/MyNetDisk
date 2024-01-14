@@ -44,4 +44,8 @@ public interface UserInfoMapper<T,P> extends BaseMapper<T,P> {
 	T selectByEmailAndQqOpenIdAndNickName(@Param("email") String email,@Param("qqOpenId") String qqOpenId,@Param("nickName") String nickName);
 
 	T selectByEmail(@Param("email") String email);
+
+	T selectByNickName(@Param("nickName") String nickName);
+
+    void updateByEmail(T updateUserInfo, String email);
 }

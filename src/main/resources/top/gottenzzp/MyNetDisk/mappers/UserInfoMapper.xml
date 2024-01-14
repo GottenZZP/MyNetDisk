@@ -514,6 +514,9 @@
  		 </set>
  		 where email=#{email} and qq_open_id=#{qqOpenId} and nick_name=#{nickName}
 	</update>
+	<update id="updateByEmail">
+		update user_info set password=#{password} where email=#{email}
+	</update>
 
 	<!-- 根据EmailAndQqOpenIdAndNickName删除-->
 	<delete id="deleteByEmailAndQqOpenIdAndNickName">
@@ -529,6 +532,11 @@
 		select
 		<include refid="base_column_list"/>
 		from user_info where email=#{email}
+	</select>
+    <select id="selectByNickName" resultMap="base_result_map">
+		select
+		<include refid="base_column_list"/>
+		from user_info where nick_name=#{nickName}
 	</select>
 
 </mapper>

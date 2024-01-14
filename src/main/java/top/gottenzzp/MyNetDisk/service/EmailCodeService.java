@@ -73,4 +73,9 @@ public interface EmailCodeService {
 	 * 发送邮箱验证码
 	 */
 	void sendEmailCode(String email, Integer type);
+
+	/*
+		校验邮箱验证码
+	 */
+    void checkCode(String email, String emailCode);
 }

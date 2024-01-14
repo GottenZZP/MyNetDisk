@@ -2,6 +2,7 @@ package top.gottenzzp.MyNetDisk.service;
 
 import java.util.List;
 
+import top.gottenzzp.MyNetDisk.entity.dto.SessionWebUserDto;
 import top.gottenzzp.MyNetDisk.entity.query.UserInfoQuery;
 import top.gottenzzp.MyNetDisk.entity.po.UserInfo;
 import top.gottenzzp.MyNetDisk.entity.vo.PaginationResultVO;
@@ -87,4 +88,20 @@ public interface UserInfoService {
 	 */
 	Integer deleteUserInfoByEmailAndQqOpenIdAndNickName(String email,String qqOpenId,String nickName);
 
+	/**
+	 * @param email 邮箱
+	 * @param nickName 昵称
+	 * @param password 密码
+	 * @param emailCode 邮箱验证码
+	 */
+	void register(String email, String nickName, String password, String emailCode);
+
+	/**
+	 * @param email 邮箱
+	 * @param password 密码
+	 * @return {@link SessionWebUserDto}
+	 */
+	SessionWebUserDto login(String email, String password);
+
+    void resetPwd(String email, String password, String emailCode);
 }
