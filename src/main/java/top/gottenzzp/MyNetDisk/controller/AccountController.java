@@ -187,26 +187,40 @@ public class AccountController extends ABaseController{
 		}
 	}
 
+	/**
+	 * 获取用户头像
+	 * @param response 		响应
+	 * @param userId		用户ID
+	 */
 	@RequestMapping("/getAvatar/{userId}")
 	@GlobalInterceptor(checkParams = true)
 	public void getAvatar(HttpServletResponse response, @VerifyParam(required = true) @PathVariable("userId") String userId) {
+		// 获取头像文件夹路径
 		String avatarFolderName = Constants.FILE_FOLDER_FILE + Constants.FILE_FOLDER_AVATAR_NAME;
 		File file = new File(appConfig.getProjectFolder() + avatarFolderName);
+		// 若路径不存在则创建
 		if (!file.exists()) {
 			file.mkdirs();
 		}
+		// 获取该用户头像路径
 		String avatarPath = appConfig.getProjectFolder() + avatarFolderName + userId + Constants.AVATAR_SUFFIX;
 		File file1 = new File(avatarPath);
+		// 若头像不存在则使用默认头像
 		if (!file1.exists()) {
 			if (!new File(appConfig.getProjectFolder() + avatarFolderName + Constants.AVATAR_DEFAULT).exists()) {
 				printNoDefaultImage(response);
 			}
 			avatarPath = appConfig.getProjectFolder() + avatarFolderName + Constants.AVATAR_DEFAULT;
 		}
+		// 返回头像
 		response.setContentType("image/jpg");
 		readFile(response, avatarPath);
 	}
 
+	/**
+	 * 输出无默认图的信息
+	 * @param response 响应
+	 */
 	private void printNoDefaultImage(HttpServletResponse response) {
 		response.setHeader(CONTENT_TYPE, CONTENT_TYPE_VALUE);
 		response.setStatus(HttpStatus.OK.value());

@@ -53,17 +53,24 @@ public class ABaseController {
         return vo;
     }
 
+    /**
+     * @param response 响应
+     * @param filePath 文件路径
+     */
     protected void readFile(HttpServletResponse response, String filePath) {
+        // 判断文件路径是否合法
         if (!StringTools.pathIsOk(filePath)) {
             return;
         }
         OutputStream outputStream = null;
         FileInputStream inputStream = null;
         try {
+            // 判断文件是否存在
             File file = new File(filePath);
             if (!file.exists()) {
                 return;
             }
+            // 读取文件
             inputStream = new FileInputStream(file);
             byte[] bytes = new byte[1024];
             outputStream = response.getOutputStream();
