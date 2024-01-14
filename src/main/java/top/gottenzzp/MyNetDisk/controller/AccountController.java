@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import top.gottenzzp.MyNetDisk.annotation.GlobalInterceptor;
 import top.gottenzzp.MyNetDisk.annotation.VerifyParam;
 import top.gottenzzp.MyNetDisk.entity.component.RedisComponent;
@@ -18,10 +19,12 @@ import top.gottenzzp.MyNetDisk.entity.dto.CreateImageCode;
 import top.gottenzzp.MyNetDisk.entity.dto.SessionWebUserDto;
 import top.gottenzzp.MyNetDisk.entity.dto.UserSpaceDto;
 import top.gottenzzp.MyNetDisk.entity.enums.VerifyRegexEnum;
+import top.gottenzzp.MyNetDisk.entity.po.UserInfo;
 import top.gottenzzp.MyNetDisk.entity.vo.ResponseVO;
 import top.gottenzzp.MyNetDisk.exception.BusinessException;
 import top.gottenzzp.MyNetDisk.service.EmailCodeService;
 import top.gottenzzp.MyNetDisk.service.UserInfoService;
+import top.gottenzzp.MyNetDisk.utils.StringTools;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
@@ -278,6 +281,59 @@ public class AccountController extends ABaseController{
 	@GlobalInterceptor(checkParams = true)
 	public ResponseVO logout(HttpSession session) {
 		session.invalidate();
+		return getSuccessResponseVO(null);
+	}
+
+	/**
+	 * 更新用户头像
+	 * @param session 	会话
+	 * @param avatar	头像
+	 * @return	{@link ResponseVO}
+	 */
+	@RequestMapping("/updateUserAvatar")
+	@GlobalInterceptor
+	public ResponseVO updateUserAvatar(HttpSession session, MultipartFile avatar) {
+		// 从会话中获取用户信息
+		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
+		// 获取头像文件夹路径
+		String baseFolder = appConfig.getProjectFolder() + Constants.FILE_FOLDER_FILE;
+		// 若路径不存在则创建
+		File targetFileFolder = new File(baseFolder + Constants.FILE_FOLDER_AVATAR_NAME);
+		if (!targetFileFolder.exists()) {
+			targetFileFolder.mkdirs();
+		}
+		// 获取该用户头像路径
+		File targetFile = new File(targetFileFolder.getPath() + "/" + webUserDto.getUserId() + Constants.AVATAR_SUFFIX);
+		// 将头像保存到本地
+		try {
+			avatar.transferTo(targetFile);
+		} catch (Exception e) {
+			logger.error("上传头像失败", e);
+		}
+		// 更新数据库中的头像路径
+		UserInfo userInfo = new UserInfo();
+		// 若本地上传了头像，则不使用QQ头像，将QQ头像设置为空
+		userInfo.setQqAvatar("");
+		userInfoService.updateUserInfoByUserId(userInfo, webUserDto.getUserId());
+		webUserDto.setAvatar(null);
+		session.setAttribute(Constants.SESSION_KEY, webUserDto);
+		return getSuccessResponseVO(null);
+	}
+
+	/**
+	 * 更新用户密码
+	 * @param session 	会话
+	 * @param password	密码
+	 * @return	{@link ResponseVO}
+	 */
+	@RequestMapping("/updatePassword")
+	@GlobalInterceptor(checkParams = true)
+	public ResponseVO updatePassword(HttpSession session,
+									 @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, min = 8, max = 18) String password) {
+		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
+		UserInfo userInfo = new UserInfo();
+		userInfo.setPassword(StringTools.encodeByMD5(password));
+		userInfoService.updateUserInfoByUserId(userInfo, webUserDto.getUserId());
 		return getSuccessResponseVO(null);
 	}
 }
