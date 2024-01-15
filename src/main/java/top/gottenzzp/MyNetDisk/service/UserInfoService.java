@@ -104,4 +104,6 @@ public interface UserInfoService {
 	SessionWebUserDto login(String email, String password);
 
     void resetPwd(String email, String password, String emailCode);
+
+    SessionWebUserDto qqLogin(String code);
 }

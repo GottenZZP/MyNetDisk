@@ -32,6 +32,9 @@ import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 客户控制员
@@ -71,7 +74,7 @@ public class AccountController extends ABaseController{
 	 * @throws IOException IOEXCEPTION
 	 */
 	@GetMapping("/checkCode")
-	@GlobalInterceptor(checkParams = true)
+	@GlobalInterceptor(checkParams = true, checkLogin = false)
 	public void checkCode(HttpServletResponse response, HttpSession session, Integer type) throws IOException {
 		CreateImageCode vCode = new CreateImageCode(130, 38, 5, 10);
 		response.setHeader("Pragma", "no-cache");
@@ -98,7 +101,7 @@ public class AccountController extends ABaseController{
 	 * @return {@link ResponseVO}
 	 */
 	@RequestMapping("/sendEmailCode")
-	@GlobalInterceptor(checkParams = true)
+	@GlobalInterceptor(checkParams = true, checkLogin = false)
 	public ResponseVO sendEmailCode(HttpSession session,
 									@VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL, max = 150) String email,
 									@VerifyParam(required = true) String checkCode,
@@ -125,7 +128,7 @@ public class AccountController extends ABaseController{
 	 * @return	{@link ResponseVO}
 	 */
 	@RequestMapping("/register")
-	@GlobalInterceptor(checkParams = true)
+	@GlobalInterceptor(checkParams = true, checkLogin = false)
 	public ResponseVO register(HttpSession session,
 							   @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL, max = 150) String email,
 							   @VerifyParam(required = true) String nickName,
@@ -152,7 +155,7 @@ public class AccountController extends ABaseController{
 	 * @return	{@link ResponseVO}
 	 */
 	@RequestMapping("/login")
-	@GlobalInterceptor(checkParams = true)
+	@GlobalInterceptor(checkParams = true, checkLogin = false)
 	public ResponseVO login(HttpSession session,
 							@VerifyParam(required = true) String email,
 							@VerifyParam(required = true) String password,
@@ -179,7 +182,7 @@ public class AccountController extends ABaseController{
 	 * @return	{@link ResponseVO}
 	 */
 	@RequestMapping("/resetPwd")
-	@GlobalInterceptor(checkParams = true)
+	@GlobalInterceptor(checkParams = true, checkLogin = false)
 	public ResponseVO resetPwd(HttpSession session,
 							   @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL, max = 150) String email,
 							   @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, min = 8, max = 18) String password,
@@ -202,7 +205,7 @@ public class AccountController extends ABaseController{
 	 * @param userId		用户ID
 	 */
 	@RequestMapping("/getAvatar/{userId}")
-	@GlobalInterceptor(checkParams = true)
+	@GlobalInterceptor(checkParams = true, checkLogin = false)
 	public void getAvatar(HttpServletResponse response, @VerifyParam(required = true) @PathVariable("userId") String userId) {
 		// 获取头像文件夹路径
 		String avatarFolderName = Constants.FILE_FOLDER_FILE + Constants.FILE_FOLDER_AVATAR_NAME;
@@ -265,7 +268,7 @@ public class AccountController extends ABaseController{
 	 * @return	{@link ResponseVO}
 	 */
 	@RequestMapping("/getUseSpace")
-	@GlobalInterceptor(checkParams = true)
+	@GlobalInterceptor
 	public ResponseVO getUseSpace(HttpSession session) {
 		SessionWebUserDto sessionWebUserDto = getUserInfoFromSession(session);
 		UserSpaceDto spaceDto = redisComponent.getUserSpaceUse(sessionWebUserDto.getUserId());
@@ -278,7 +281,6 @@ public class AccountController extends ABaseController{
 	 * @return	{@link ResponseVO}
 	 */
 	@RequestMapping("/logout")
-	@GlobalInterceptor(checkParams = true)
 	public ResponseVO logout(HttpSession session) {
 		session.invalidate();
 		return getSuccessResponseVO(null);
@@ -335,5 +337,27 @@ public class AccountController extends ABaseController{
 		userInfo.setPassword(StringTools.encodeByMD5(password));
 		userInfoService.updateUserInfoByUserId(userInfo, webUserDto.getUserId());
 		return getSuccessResponseVO(null);
+	}
+
+	@RequestMapping("/qqlogin")
+	@GlobalInterceptor(checkParams = true, checkLogin = false)
+	public ResponseVO qqlogin(HttpSession session, String callbackUrl) {
+		String state = StringTools.getRandomNumber(Constants.LENGTH_30);
+		if (!StringTools.isEmpty(callbackUrl)) {
+			session.setAttribute(state, callbackUrl);
+		}
+		String url = String.format(appConfig.getQqUrlAuthorization(), appConfig.getQqAppId(), URLEncoder.encode(appConfig.getQqUrlRedirect(),"utf-8"), state);
+		return getSuccessResponseVO(url);
+	}
+
+	@RequestMapping("/qqlogin/callback")
+	@GlobalInterceptor(checkParams = true, checkLogin = false)
+	public ResponseVO qqloginCallback(HttpSession session, @VerifyParam(required = true) String code, @VerifyParam(required = true) String state) {
+		SessionWebUserDto sessionWebUserDto = userInfoService.qqLogin(code);
+		session.setAttribute(Constants.SESSION_KEY, sessionWebUserDto);
+		Map<String, Object> result = new HashMap<>();
+		result.put("callbackUrl", session.getAttribute(state));
+		result.put("userInfo", sessionWebUserDto);
+		return getSuccessResponseVO(url);
 	}
 }

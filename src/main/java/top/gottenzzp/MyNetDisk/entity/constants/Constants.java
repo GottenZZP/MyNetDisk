@@ -17,4 +17,7 @@ public class Constants {
     public static final String FILE_FOLDER_AVATAR_NAME = "avatar/";
     public static final String AVATAR_DEFAULT = "default.jpg";
     public static final String AVATAR_SUFFIX = ".jpg";
+    public static final Integer LENGTH_30 = 30;
+    public static final String VIEW_OBJ_RESULT_KEY = "result";
+    public static final Integer LENGTH_20 = 20;
 }

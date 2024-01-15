@@ -518,6 +518,44 @@
 		update user_info set password=#{password} where email=#{email}
 	</update>
 
+	<!-- 根据QqOpenId修改-->
+	<update id="updateByQqOpenId" parameterType="top.gottenzzp.MyNetDisk.entity.po.UserInfo">
+		UPDATE user_info
+		<set>
+			<if test="bean.userId != null">
+				user_id = #{bean.userId},
+			</if>
+			<if test="bean.nickName != null">
+				nick_name = #{bean.nickName},
+			</if>
+			<if test="bean.email != null">
+				email = #{bean.email},
+			</if>
+			<if test="bean.qqAvatar != null">
+				qq_avatar = #{bean.qqAvatar},
+			</if>
+			<if test="bean.password != null">
+				password = #{bean.password},
+			</if>
+			<if test="bean.joinTime != null">
+				join_time = #{bean.joinTime},
+			</if>
+			<if test="bean.lastLoginTime != null">
+				last_login_time = #{bean.lastLoginTime},
+			</if>
+			<if test="bean.status != null">
+				status = #{bean.status},
+			</if>
+			<if test="bean.useSpace != null">
+				use_space = #{bean.useSpace},
+			</if>
+			<if test="bean.totalSpace != null">
+				total_space = #{bean.totalSpace},
+			</if>
+		</set>
+		where qq_open_id=#{qqOpenId}
+	</update>
+
 	<!-- 根据EmailAndQqOpenIdAndNickName删除-->
 	<delete id="deleteByEmailAndQqOpenIdAndNickName">
 		delete from user_info where email=#{email} and qq_open_id=#{qqOpenId} and nick_name=#{nickName}
@@ -537,6 +575,11 @@
 		select
 		<include refid="base_column_list"/>
 		from user_info where nick_name=#{nickName}
+	</select>
+    <select id="selectByQqOpenId" resultMap="base_result_map">
+		select
+		<include refid="base_column_list"/>
+		from user_info where qq_open_id=#{qqOpenId}
 	</select>
 
 </mapper>

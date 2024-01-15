@@ -8,13 +8,19 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import top.gottenzzp.MyNetDisk.annotation.GlobalInterceptor;
 import top.gottenzzp.MyNetDisk.annotation.VerifyParam;
+import top.gottenzzp.MyNetDisk.entity.constants.Constants;
+import top.gottenzzp.MyNetDisk.entity.dto.SessionWebUserDto;
 import top.gottenzzp.MyNetDisk.entity.enums.ResponseCodeEnum;
 import top.gottenzzp.MyNetDisk.exception.BusinessException;
 import top.gottenzzp.MyNetDisk.utils.StringTools;
 import top.gottenzzp.MyNetDisk.utils.VerifyUtils;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -56,9 +62,9 @@ public class GlobalOperationAspect {
             /**
              * 校验登录
              */
-            // if (interceptor.checkLogin() || interceptor.checkAdmin()) {
-            //     checkLogin(interceptor.checkAdmin());
-            // }
+            if (interceptor.checkLogin() || interceptor.checkAdmin()) {
+                checkLogin(interceptor.checkAdmin());
+            }
             /**
              * 校验参数
              */
@@ -75,6 +81,24 @@ public class GlobalOperationAspect {
         } catch (Throwable e) {
             logger.error("全局拦截器异常", e);
             throw new BusinessException(ResponseCodeEnum.CODE_500);
+        }
+    }
+
+    /**
+     * 校验登陆
+     * @param checkAdmin 是否校验管理员
+     */
+    private void checkLogin(Boolean checkAdmin) {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        HttpSession session = request.getSession();
+        SessionWebUserDto userDto = (SessionWebUserDto) session.getAttribute(Constants.SESSION_KEY);
+        // 若未登陆则抛出异常
+        if (userDto == null) {
+            throw new BusinessException(ResponseCodeEnum.CODE_901);
+        }
+        // 若需要校验管理员权限，且当前用户不是管理员，则抛出异常
+        if (checkAdmin && !userDto.getIsAdmin()) {
+            throw new BusinessException(ResponseCodeEnum.CODE_404);
         }
     }
 
