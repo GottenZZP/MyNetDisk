@@ -245,11 +245,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 
 		UserSpaceDto userSpaceDto = new UserSpaceDto();
 		// TODO 查询当前用户已使用空间
-		// userSpaceDto.setUseSpace(0L);
+		userSpaceDto.setUseSpace(0L);
 		userSpaceDto.setTotalSpace(userInfo.getTotalSpace());
-		// userSpaceDto.setUseSpace(userInfo.getUseSpace());
 		redisComponent.saveUserSpaceUse(userInfo.getUserId(), userSpaceDto);
-
 		return sessionWebUserDto;
 	}
 

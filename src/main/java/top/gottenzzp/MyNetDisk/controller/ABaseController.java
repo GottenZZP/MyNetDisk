@@ -6,8 +6,10 @@ import org.slf4j.LoggerFactory;
 import top.gottenzzp.MyNetDisk.entity.constants.Constants;
 import top.gottenzzp.MyNetDisk.entity.dto.SessionWebUserDto;
 import top.gottenzzp.MyNetDisk.entity.enums.ResponseCodeEnum;
+import top.gottenzzp.MyNetDisk.entity.vo.PaginationResultVO;
 import top.gottenzzp.MyNetDisk.entity.vo.ResponseVO;
 import top.gottenzzp.MyNetDisk.exception.BusinessException;
+import top.gottenzzp.MyNetDisk.utils.CopyTools;
 import top.gottenzzp.MyNetDisk.utils.StringTools;
 
 import javax.servlet.ServletOutputStream;
@@ -18,6 +20,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+/**
+ * @author gottenzzp
+ */
 @Slf4j
 public class ABaseController {
     private static final Logger logger = LoggerFactory.getLogger(ABaseController.class);
@@ -100,6 +105,16 @@ public class ABaseController {
                 }
             }
         }
+    }
+
+    protected <S, T> PaginationResultVO<T> convert2PaginationVO(PaginationResultVO<S> result, Class<T> classz) {
+        PaginationResultVO<T> resultVO = new PaginationResultVO<>();
+        resultVO.setList(CopyTools.copyList(result.getList(), classz));
+        resultVO.setPageNo(result.getPageNo());
+        resultVO.setPageSize(result.getPageSize());
+        resultVO.setPageTotal(result.getPageTotal());
+        resultVO.setTotalCount(result.getTotalCount());
+        return resultVO;
     }
 
     protected SessionWebUserDto getUserInfoFromSession(HttpSession session) {

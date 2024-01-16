@@ -32,6 +32,7 @@ import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
@@ -341,7 +342,7 @@ public class AccountController extends ABaseController{
 
 	@RequestMapping("/qqlogin")
 	@GlobalInterceptor(checkParams = true, checkLogin = false)
-	public ResponseVO qqlogin(HttpSession session, String callbackUrl) {
+	public ResponseVO qqlogin(HttpSession session, String callbackUrl) throws UnsupportedEncodingException {
 		String state = StringTools.getRandomNumber(Constants.LENGTH_30);
 		if (!StringTools.isEmpty(callbackUrl)) {
 			session.setAttribute(state, callbackUrl);
@@ -358,6 +359,6 @@ public class AccountController extends ABaseController{
 		Map<String, Object> result = new HashMap<>();
 		result.put("callbackUrl", session.getAttribute(state));
 		result.put("userInfo", sessionWebUserDto);
-		return getSuccessResponseVO(url);
+		return getSuccessResponseVO(result);
 	}
 }
