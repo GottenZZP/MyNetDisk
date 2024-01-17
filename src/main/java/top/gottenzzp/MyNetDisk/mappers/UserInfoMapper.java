@@ -45,11 +45,46 @@ public interface UserInfoMapper<T,P> extends BaseMapper<T,P> {
 
 	T selectByEmail(@Param("email") String email);
 
+	/**
+	 * 获取昵称
+	 *
+	 * @param nickName 昵称
+	 * @return {@link T}
+	 */
 	T selectByNickName(@Param("nickName") String nickName);
 
-    void updateByEmail(T updateUserInfo, String email);
+	/**
+	 * 通过电子邮件更新
+	 *
+	 * @param updateUserInfo 更新用户信息
+	 * @param email          电子邮件
+	 */
+	void updateByEmail(T updateUserInfo, String email);
 
-    T selectByQqOpenId(String qqOpenId);
+	/**
+	 * 获取通过qq openid
+	 *
+	 * @param qqOpenId qq开放id
+	 * @return {@link T}
+	 */
+	T selectByQqOpenId(String qqOpenId);
 
+	/**
+	 * 更新qq openid更新
+	 *
+	 * @param t        t
+	 * @param qqOpenId qq开放id
+	 * @return {@link Integer}
+	 */
 	Integer updateByQqOpenId(@Param("bean") T t, @Param("qqOpenId") String qqOpenId);
+
+	/**
+	 * 更新用户空间
+	 *
+	 * @param userId     用户id
+	 * @param useSpace   使用空间
+	 * @param totalSpace 总空间
+	 * @return {@link Integer}
+	 */
+	Integer updateUserSpace(String userId, Long useSpace, Long totalSpace);
 }

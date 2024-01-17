@@ -24,11 +24,14 @@ import top.gottenzzp.MyNetDisk.entity.dto.SysSettingsDto;
 import top.gottenzzp.MyNetDisk.entity.dto.UserSpaceDto;
 import top.gottenzzp.MyNetDisk.entity.enums.PageSize;
 import top.gottenzzp.MyNetDisk.entity.enums.UserStatusEnum;
+import top.gottenzzp.MyNetDisk.entity.po.FileInfo;
+import top.gottenzzp.MyNetDisk.entity.query.FileInfoQuery;
 import top.gottenzzp.MyNetDisk.entity.query.UserInfoQuery;
 import top.gottenzzp.MyNetDisk.entity.po.UserInfo;
 import top.gottenzzp.MyNetDisk.entity.vo.PaginationResultVO;
 import top.gottenzzp.MyNetDisk.entity.query.SimplePage;
 import top.gottenzzp.MyNetDisk.exception.BusinessException;
+import top.gottenzzp.MyNetDisk.mappers.FileInfoMapper;
 import top.gottenzzp.MyNetDisk.mappers.UserInfoMapper;
 import top.gottenzzp.MyNetDisk.service.EmailCodeService;
 import top.gottenzzp.MyNetDisk.service.UserInfoService;
@@ -56,6 +59,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 
 	@Resource
 	private AppConfig appConfig;
+
+	@Resource
+	private FileInfoMapper<FileInfo, FileInfoQuery> fileInfoMapper;
 
 	/**
 	 * 根据条件查询列表
@@ -244,8 +250,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 		}
 
 		UserSpaceDto userSpaceDto = new UserSpaceDto();
-		// TODO 查询当前用户已使用空间
-		userSpaceDto.setUseSpace(0L);
+		userSpaceDto.setUseSpace(fileInfoMapper.selectUseSpace(userInfo.getUserId()));
 		userSpaceDto.setTotalSpace(userInfo.getTotalSpace());
 		redisComponent.saveUserSpaceUse(userInfo.getUserId(), userSpaceDto);
 		return sessionWebUserDto;
@@ -269,14 +274,14 @@ public class UserInfoServiceImpl implements UserInfoService {
 	@Override
 	public SessionWebUserDto qqLogin(String code) {
 		// 通过回调code，获取accessToken
-		String accessToken = getQQAccessToken(code);
+		String accessToken = getQqAccessToken(code);
 		// 获取openId
-		String qqOpenId = getQQOpenId(accessToken);
+		String qqOpenId = getQqOpenId(accessToken);
 
 		UserInfo userInfo = userInfoMapper.selectByQqOpenId(qqOpenId);
 		String avatar = null;
 		if (userInfo == null) {
-			QQInfoDto qqInfoDto = getQQUserInfo(accessToken, qqOpenId);
+			QQInfoDto qqInfoDto = getQqUserInfo(accessToken, qqOpenId);
 			userInfo = new UserInfo();
 			String nickname = qqInfoDto.getNickname();
 			nickname = nickname.length() > Constants.LENGTH_20 ? nickname.substring(0, Constants.LENGTH_20) : nickname;
@@ -286,7 +291,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 			userInfo.setQqOpenId(qqOpenId);
 			userInfo.setNickName(nickname);
 			userInfo.setRegisterTime(date);
-			userInfo.setUserId(StringTools.getRandomNumber(Constants.LENGTH_15));
+			userInfo.setUserId(StringTools.getRandomString(Constants.LENGTH_10));
 			userInfo.setLastLoginTime(date);
 			userInfo.setUseSpace(0L);
 			userInfo.setTotalSpace(redisComponent.getSysSettingDto().getUserInitUseSpace() * Constants.MB);
@@ -311,14 +316,13 @@ public class UserInfoServiceImpl implements UserInfoService {
 		}
 
 		UserSpaceDto userSpaceDto = new UserSpaceDto();
-		// TODO 查询当前用户已使用空间
-		userSpaceDto.setUseSpace(0L);
+		userSpaceDto.setUseSpace(fileInfoMapper.selectUseSpace(userInfo.getUserId()));
 		userSpaceDto.setTotalSpace(userInfo.getTotalSpace());
 		redisComponent.saveUserSpaceUse(userInfo.getUserId(), userSpaceDto);
 		return sessionWebUserDto;
 	}
 
-	private String getQQAccessToken(String code) {
+	private String getQqAccessToken(String code) {
 		/*
 		  返回结果是字符串 access_token=*&expires_in=7776000&refresh_token=* 返回错误 callback({UcWebConstants.VIEW_OBJ_RESULT_KEY:111,error_description:"error msg"})
 		 */
@@ -347,11 +351,11 @@ public class UserInfoServiceImpl implements UserInfoService {
 		return accessToken;
 	}
 
-	private String getQQOpenId(String accessToken) throws BusinessException {
+	private String getQqOpenId(String accessToken) throws BusinessException {
 		// 获取openId
 		String url = String.format(appConfig.getQqUrlOpenId(), accessToken);
 		String openIDResult = OKHttpUtils.getRequest(url);
-		String tmpJson = this.getQQResp(openIDResult);
+		String tmpJson = this.getQqResp(openIDResult);
 		if (tmpJson == null) {
 			logger.error("调qq接口获取openID失败:tmpJson{}", tmpJson);
 			throw new BusinessException("调qq接口获取openID失败");
@@ -365,7 +369,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 	}
 
 
-	private QQInfoDto getQQUserInfo(String accessToken, String qqOpenId) throws BusinessException {
+	private QQInfoDto getQqUserInfo(String accessToken, String qqOpenId) throws BusinessException {
 		String url = String.format(appConfig.getQqUrlUserInfo(), accessToken, appConfig.getQqAppId(), qqOpenId);
 		String response = OKHttpUtils.getRequest(url);
 		if (StringUtils.isNotBlank(response)) {
@@ -379,14 +383,13 @@ public class UserInfoServiceImpl implements UserInfoService {
 		throw new BusinessException("调qq接口获取用户信息异常");
 	}
 
-	private String getQQResp(String result) {
+	private String getQqResp(String result) {
 		if (StringUtils.isNotBlank(result)) {
 			int pos = result.indexOf("callback");
 			if (pos != -1) {
 				int start = result.indexOf("(");
 				int end = result.lastIndexOf(")");
-				String jsonStr = result.substring(start + 1, end - 1);
-				return jsonStr;
+				return result.substring(start + 1, end - 1);
 			}
 		}
 		return null;

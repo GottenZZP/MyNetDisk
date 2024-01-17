@@ -1,6 +1,7 @@
 package top.gottenzzp.MyNetDisk.utils;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import top.gottenzzp.MyNetDisk.entity.constants.Constants;
 import top.gottenzzp.MyNetDisk.exception.BusinessException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -11,6 +12,10 @@ public class StringTools {
     public static final String getRandomNumber(Integer count) {
         return RandomStringUtils.random(count, false, true);
     }
+    public static final String getRandomString(Integer count) {
+        return RandomStringUtils.random(count, true, true);
+    }
+
 
     public static void checkParam(Object param) {
         try {
@@ -66,5 +71,27 @@ public class StringTools {
             return true;
         }
         return !path.contains("../") && !path.contains("..\\");
+    }
+
+    public static String rename(String fileName) {
+        String fileNameNoSuffix = getFileNameNoSuffix(fileName);
+        String fileNoSuffix = getFileNoSuffix(fileName);
+        return fileNameNoSuffix + "_" + getRandomString(Constants.LENGTH_5) + fileNoSuffix;
+    }
+
+    public static String getFileNameNoSuffix(String fileName) {
+        int index = fileName.lastIndexOf(".");
+        if (index == -1) {
+            return fileName;
+        }
+        return fileName.substring(0, index);
+    }
+
+    public static String getFileNoSuffix(String fileName) {
+        int index = fileName.lastIndexOf(".");
+        if (index == -1) {
+            return "";
+        }
+        return fileName.substring(index);
     }
 }

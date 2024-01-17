@@ -2,6 +2,9 @@ package top.gottenzzp.MyNetDisk.service;
 
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+import top.gottenzzp.MyNetDisk.entity.dto.SessionWebUserDto;
+import top.gottenzzp.MyNetDisk.entity.dto.UploadResultDto;
 import top.gottenzzp.MyNetDisk.entity.query.FileInfoQuery;
 import top.gottenzzp.MyNetDisk.entity.po.FileInfo;
 import top.gottenzzp.MyNetDisk.entity.vo.PaginationResultVO;
@@ -69,4 +72,5 @@ public interface FileInfoService {
 	 */
 	Integer deleteFileInfoByFileIdAndUserId(String fileId,String userId);
 
+	UploadResultDto uploadFile(SessionWebUserDto webUserDto, String fileId, MultipartFile file, String fileName, String filePid, String fileMd5, Integer chunkIndex, Integer chunks);
 }

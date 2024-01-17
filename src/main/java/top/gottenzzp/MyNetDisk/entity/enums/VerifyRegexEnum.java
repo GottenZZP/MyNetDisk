@@ -1,6 +1,14 @@
 package top.gottenzzp.MyNetDisk.entity.enums;
 
+import lombok.Getter;
+
+/**
+ * @author gottenzzp
+ */
+
+@Getter
 public enum VerifyRegexEnum {
+    // 自定义的一些正则表达式
     NO("", "不校验"),
     IP("([1-9]|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])(\\.(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])){3}", "IP地址"),
     POSITIVE_INTEGER("^[0-9]*[1-9][0-9]*$", "正整数"),
@@ -12,19 +20,12 @@ public enum VerifyRegexEnum {
     ACCOUNT("^[0-9a-zA-Z_]{1,}$", "字母开头,由数字、英文字母或者下划线组成"),
     MONEY("^[0-9]+(.[0-9]{1,2})?$", "金额");
 
-    private String regex;
-    private String desc;
+    private final String regex;
+    private final String desc;
 
     VerifyRegexEnum(String regex, String desc) {
         this.regex = regex;
         this.desc = desc;
     }
 
-    public String getRegex() {
-        return regex;
-    }
-
-    public String getDesc() {
-        return desc;
-    }
 }

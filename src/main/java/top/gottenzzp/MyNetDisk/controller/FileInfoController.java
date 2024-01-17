@@ -1,6 +1,10 @@
 package top.gottenzzp.MyNetDisk.controller;
 
+import org.springframework.web.multipart.MultipartFile;
 import top.gottenzzp.MyNetDisk.annotation.GlobalInterceptor;
+import top.gottenzzp.MyNetDisk.annotation.VerifyParam;
+import top.gottenzzp.MyNetDisk.entity.dto.SessionWebUserDto;
+import top.gottenzzp.MyNetDisk.entity.dto.UploadResultDto;
 import top.gottenzzp.MyNetDisk.entity.enums.FileCategoryEnums;
 import top.gottenzzp.MyNetDisk.entity.enums.FileDelFlagEnums;
 import top.gottenzzp.MyNetDisk.entity.query.FileInfoQuery;
@@ -53,5 +57,34 @@ public class FileInfoController extends ABaseController{
 		PaginationResultVO<FileInfo> page = fileInfoService.findListByPage(query);
 		// 将分页查询的结果转换为前端需要的格式:FileInfoVO
 		return getSuccessResponseVO(convert2PaginationVO(page, FileInfoVO.class));
+	}
+
+	/**
+	 * 上传档案
+	 *
+	 * @param session    会话
+	 * @param fileId     文件id
+	 * @param file       文件
+	 * @param fileName   文件名
+	 * @param filePid    文件pid
+	 * @param fileMd5    文件md5
+	 * @param chunkIndex 分片索引
+	 * @param chunks     所有分片
+	 * @return {@link ResponseVO}
+	 */
+	@RequestMapping("/uploadFile")
+	@GlobalInterceptor(checkParams = true)
+	public ResponseVO uploadFile(HttpSession session,
+								 String fileId,
+								 MultipartFile file,
+								 @VerifyParam(required = true) String fileName,
+								 @VerifyParam(required = true) String filePid,
+								 @VerifyParam(required = true) String fileMd5,
+								 @VerifyParam(required = true) Integer chunkIndex,
+								 @VerifyParam(required = true) Integer chunks) {
+		// 获取当前用户的文件信息
+		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
+		UploadResultDto uploadResultDto = fileInfoService.uploadFile(webUserDto, fileId, file, fileName, filePid, fileMd5, chunkIndex, chunks);
+		return getSuccessResponseVO(uploadResultDto);
 	}
 }

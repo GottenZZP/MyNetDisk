@@ -14,9 +14,9 @@ public enum FileCategoryEnums {
     IMAGE(3, "image", "图片"),
     DOC(4, "doc", "文档"),
     OTHERS(5, "others", "其他");
-    private Integer category;
-    private String code;
-    private String desc;
+    private final Integer category;
+    private final String code;
+    private final String desc;
 
     FileCategoryEnums(Integer category, String code, String desc) {
         this.category = category;
@@ -24,22 +24,11 @@ public enum FileCategoryEnums {
         this.desc = desc;
     }
 
-    public void setCategory(Integer category) {
-        this.category = category;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public void setDesc(String desc) {
-        this.desc = desc;
-    }
-
     public static FileCategoryEnums getByCode(String code) {
         for (FileCategoryEnums value : FileCategoryEnums.values()) {
-            if (value.getCode().equals(code))
+            if (value.getCode().equals(code)) {
                 return value;
+            }
         }
         return null;
     }

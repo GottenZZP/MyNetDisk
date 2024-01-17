@@ -555,8 +555,26 @@
 		</set>
 		where qq_open_id=#{qqOpenId}
 	</update>
+	<update id="updateUserSpace">
+        update user_info
+        <set>
+            <if test="useSpace != null">
+                use_space = use_space + #{useSpace},
+            </if>
+            <if test="totalSpace != null">
+                total_space = total_space + #{totalSpace},
+            </if>
+        </set>
+        where user_id = #{userId}
+        <if test="useSpace != null">
+            and <![CDATA[ (use_space+#{useSpace}) <= total_space ]]>
+        </if>
+        <if test="totalSpace != null">
+            and <![CDATA[ (total_space+#{totalSpace}) >= use_space ]]>
+        </if>
+    </update>
 
-	<!-- 根据EmailAndQqOpenIdAndNickName删除-->
+    <!-- 根据EmailAndQqOpenIdAndNickName删除-->
 	<delete id="deleteByEmailAndQqOpenIdAndNickName">
 		delete from user_info where email=#{email} and qq_open_id=#{qqOpenId} and nick_name=#{nickName}
 	</delete>
