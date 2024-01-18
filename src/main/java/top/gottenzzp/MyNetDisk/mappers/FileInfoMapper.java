@@ -33,4 +33,15 @@ public interface FileInfoMapper<T,P> extends BaseMapper<T,P> {
 	 */
 	@Select("select ifnull(sum(file_size), 0) from file_info where user_id = #{userId}")
 	Long selectUseSpace(@Param("userId") String userId);
+
+	/**
+	 * 更新文件状态
+	 *
+	 * @param fileId    文件id
+	 * @param userId    用户id
+	 * @param t         t
+	 * @param oldStatus 旧状态
+	 */
+	void updateFileStatusWithOldStatus(@Param("fileId") String fileId, @Param("userId") String userId,
+									   @Param("bean") T t, @Param("oldStatus") Integer oldStatus);
 }

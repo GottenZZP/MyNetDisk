@@ -2,6 +2,8 @@ package top.gottenzzp.MyNetDisk.entity.po;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Date;
+
+import lombok.Builder;
 import top.gottenzzp.MyNetDisk.entity.enums.DateTimePatternEnum;
 import top.gottenzzp.MyNetDisk.utils.DateUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;

@@ -24,4 +24,8 @@ public class Constants {
     public static final Integer LENGTH_10 = 10;
     public static final String FILE_FOLDER_TEMP = "/temp/";
     public static final String REDIS_KEY_USER_FILE_TEMP_SIZE = "mynetdisk:user:file:temp:";
+    public static final String TS_NAME = "index.ts";
+    public static final String M3U8_NAME = "index.m3u8";
+    public static final String IMAGE_PNG_SUFFIX = ".png";
+    public static final Integer LENGTH_150 = 150;
 }

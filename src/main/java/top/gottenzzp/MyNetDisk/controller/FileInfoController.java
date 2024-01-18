@@ -1,5 +1,7 @@
 package top.gottenzzp.MyNetDisk.controller;
 
+import org.apache.ibatis.annotations.Param;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 import top.gottenzzp.MyNetDisk.annotation.GlobalInterceptor;
 import top.gottenzzp.MyNetDisk.annotation.VerifyParam;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -26,7 +29,7 @@ import javax.servlet.http.HttpSession;
  */
 @RestController("fileInfoController")
 @RequestMapping("/file")
-public class FileInfoController extends ABaseController{
+public class FileInfoController extends CommonFileController {
 	@Resource
 	private FileInfoService fileInfoService;
 
@@ -86,5 +89,22 @@ public class FileInfoController extends ABaseController{
 		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
 		UploadResultDto uploadResultDto = fileInfoService.uploadFile(webUserDto, fileId, file, fileName, filePid, fileMd5, chunkIndex, chunks);
 		return getSuccessResponseVO(uploadResultDto);
+	}
+
+	@RequestMapping("/getImage/{imageFolder}/{imageName}")
+	public void getImage(HttpServletResponse response, @PathVariable("imageFolder") String imageFolder, @PathVariable("imageName") String imageName) {
+		super.getImage(response, imageFolder, imageName);
+	}
+
+	@RequestMapping("/ts/getVideoInfo/{fileId}")
+	public void getVideoInfo(HttpServletResponse response, HttpSession session, @PathVariable("fileId") String fileId) {
+		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
+		super.getFile(response, fileId, webUserDto.getUserId());
+	}
+
+	@RequestMapping("/getFile/{fileId}")
+	public void getFile(HttpServletResponse response, HttpSession session, @PathVariable("fileId") String fileId) {
+		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
+		super.getFile(response, fileId, webUserDto.getUserId());
 	}
 }

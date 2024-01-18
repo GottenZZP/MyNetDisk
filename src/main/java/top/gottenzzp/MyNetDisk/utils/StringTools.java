@@ -75,7 +75,7 @@ public class StringTools {
 
     public static String rename(String fileName) {
         String fileNameNoSuffix = getFileNameNoSuffix(fileName);
-        String fileNoSuffix = getFileNoSuffix(fileName);
+        String fileNoSuffix = getFileSuffix(fileName);
         return fileNameNoSuffix + "_" + getRandomString(Constants.LENGTH_5) + fileNoSuffix;
     }
 
@@ -87,7 +87,7 @@ public class StringTools {
         return fileName.substring(0, index);
     }
 
-    public static String getFileNoSuffix(String fileName) {
+    public static String getFileSuffix(String fileName) {
         int index = fileName.lastIndexOf(".");
         if (index == -1) {
             return "";
