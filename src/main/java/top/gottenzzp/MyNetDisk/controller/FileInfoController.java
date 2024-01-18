@@ -141,9 +141,23 @@ public class FileInfoController extends CommonFileController {
 	@GlobalInterceptor(checkParams = true)
 	public ResponseVO newFoloder(HttpSession session,
 						@VerifyParam(required = true) String filePid,
-						@VerifyParam(required = true) String folderName) {
+						@VerifyParam(required = true) String fileName) {
 		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
-		FileInfo fileInfo = fileInfoService.newFolder(filePid, webUserDto.getUserId(), folderName);
+		FileInfo fileInfo = fileInfoService.newFolder(filePid, webUserDto.getUserId(), fileName);
 		return getSuccessResponseVO(fileInfo);
+	}
+
+	/**
+	 * 获取path路径的文件结构信息
+	 *
+	 * @param path   路径
+	 * @return {@link ResponseVO}
+	 */
+	@RequestMapping("/getFolderInfo")
+	@GlobalInterceptor(checkParams = true)
+	public ResponseVO getFolderInfo(HttpSession session,
+								 @VerifyParam(required = true) String path) {
+		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
+		return super.getFolderInfo(path, webUserDto.getUserId());
 	}
 }

@@ -1,9 +1,13 @@
 package top.gottenzzp.MyNetDisk.controller;
 
+import org.apache.commons.lang3.StringUtils;
 import top.gottenzzp.MyNetDisk.entity.config.AppConfig;
 import top.gottenzzp.MyNetDisk.entity.constants.Constants;
 import top.gottenzzp.MyNetDisk.entity.enums.FileCategoryEnums;
+import top.gottenzzp.MyNetDisk.entity.enums.FileFolderTypeEnums;
 import top.gottenzzp.MyNetDisk.entity.po.FileInfo;
+import top.gottenzzp.MyNetDisk.entity.query.FileInfoQuery;
+import top.gottenzzp.MyNetDisk.entity.vo.ResponseVO;
 import top.gottenzzp.MyNetDisk.service.FileInfoService;
 import top.gottenzzp.MyNetDisk.utils.StringTools;
 
@@ -11,6 +15,7 @@ import javax.annotation.Priority;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.util.List;
 
 /**
  * @Title: CommonFileController
@@ -74,5 +79,26 @@ public class CommonFileController extends ABaseController {
             }
         }
         readFile(response, filePath);
+    }
+
+    /**
+     * 获取path路径的文件结构信息
+     *
+     * @param path   路径
+     * @param userId 用户id
+     * @return {@link ResponseVO}
+     */
+    public ResponseVO getFolderInfo(String path, String userId) {
+        // 传入进来的是"xnVzRSIFAV/J2fhGMlYsO"结构的path，每个/分割开的是一个文件夹id
+        String[] pathList = path.split("/");
+        FileInfoQuery infoQuery = new FileInfoQuery();
+        infoQuery.setUserId(userId);
+        infoQuery.setFolderType(FileFolderTypeEnums.FOLDER.getType());
+        infoQuery.setFileIdArray(pathList);
+        // 按照传入的path路径里的文件夹id顺序来查询数据库
+        String orderBy = "field(file_id,\"" + StringUtils.join(pathList, "\",\"") + "\")";
+        infoQuery.setOrderBy(orderBy);
+        List<FileInfo> infoList = fileInfoService.findListByParam(infoQuery);
+        return getSuccessResponseVO(infoList);
     }
 }

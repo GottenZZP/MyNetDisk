@@ -347,7 +347,7 @@ public class FileInfoServiceImpl implements FileInfoService {
         fileInfo.setFileName(folderName);
         fileInfo.setStatus(FileStatusEnums.USING.getStatus());
         fileInfo.setDelFlag(FileDelFlagEnums.USING.getFlag());
-        fileInfo.setFileType(FileFolderTypeEnums.FOLDER.getType());
+        fileInfo.setFolderType(FileFolderTypeEnums.FOLDER.getType());
         fileInfoMapper.insert(fileInfo);
         return fileInfo;
     }
