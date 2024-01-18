@@ -324,6 +324,56 @@ public class FileInfoServiceImpl implements FileInfoService {
         return resultDto;
     }
 
+    /**
+     * 创建新文件夹
+     *
+     * @param filePid    文件pid
+     * @param userId     用户id
+     * @param folderName 文件夹名称
+     * @return {@link FileInfo}
+     */
+    @Override
+    public FileInfo newFolder(String filePid, String userId, String folderName) {
+        // 检查文件夹名称是否合法
+        checkFileName(filePid, userId, folderName, FileFolderTypeEnums.FOLDER.getType());
+        // 插入到数据库中
+        Date curDate = new Date();
+        FileInfo fileInfo = new FileInfo();
+        fileInfo.setFileId(StringTools.getRandomString(Constants.LENGTH_10));
+        fileInfo.setFilePid(filePid);
+        fileInfo.setUserId(userId);
+        fileInfo.setCreateTime(curDate);
+        fileInfo.setLastUpdateTime(curDate);
+        fileInfo.setFileName(folderName);
+        fileInfo.setStatus(FileStatusEnums.USING.getStatus());
+        fileInfo.setDelFlag(FileDelFlagEnums.USING.getFlag());
+        fileInfo.setFileType(FileFolderTypeEnums.FOLDER.getType());
+        fileInfoMapper.insert(fileInfo);
+        return fileInfo;
+    }
+
+    /**
+     * 检查文件夹名称, 若同级目录有重名的文件夹，则抛出异常
+     *
+     * @param filePid    文件pid
+     * @param userId     用户id
+     * @param folderName 文件夹名称
+     * @param folderType 文件夹类型
+     */
+    private void checkFileName(String filePid, String userId, String folderName, Integer folderType) {
+        FileInfoQuery infoQuery = new FileInfoQuery();
+        infoQuery.setFolderType(folderType);
+        infoQuery.setFilePid(filePid);
+        infoQuery.setUserId(userId);
+        infoQuery.setFileName(folderName);
+        Integer count = fileInfoMapper.selectCount(infoQuery);
+        if (count > 0) {
+            throw new BusinessException("此目录下已经存在同名文件夹，请修改名称");
+        }
+    }
+
+
+
     @Async
     public void transferFile(String fileId, SessionWebUserDto webUserDto) {
         Boolean transferSuccess = true;

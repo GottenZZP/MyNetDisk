@@ -91,20 +91,59 @@ public class FileInfoController extends CommonFileController {
 		return getSuccessResponseVO(uploadResultDto);
 	}
 
+	/**
+	 * 获取图像
+	 *
+	 * @param response	  响应
+	 * @param imageFolder 图像文件夹
+	 * @param imageName   图像名称
+	 */
 	@RequestMapping("/getImage/{imageFolder}/{imageName}")
 	public void getImage(HttpServletResponse response, @PathVariable("imageFolder") String imageFolder, @PathVariable("imageName") String imageName) {
 		super.getImage(response, imageFolder, imageName);
 	}
 
+	/**
+	 * 获取视频信息
+	 *
+	 * @param response 响应
+	 * @param session  会话
+	 * @param fileId   文件身份证件
+	 */
 	@RequestMapping("/ts/getVideoInfo/{fileId}")
 	public void getVideoInfo(HttpServletResponse response, HttpSession session, @PathVariable("fileId") String fileId) {
 		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
 		super.getFile(response, fileId, webUserDto.getUserId());
 	}
 
+	/**
+	 * 获取文件
+	 *
+	 * @param response 响应
+	 * @param session  会话
+	 * @param fileId   文件id
+	 */
 	@RequestMapping("/getFile/{fileId}")
 	public void getFile(HttpServletResponse response, HttpSession session, @PathVariable("fileId") String fileId) {
 		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
 		super.getFile(response, fileId, webUserDto.getUserId());
+	}
+
+	/**
+	 * 创建新文件夹
+	 *
+	 * @param session    会话
+	 * @param filePid    文件pid
+	 * @param folderName 文件夹名称
+	 * @return {@link ResponseVO}
+	 */
+	@RequestMapping("/newFoloder")
+	@GlobalInterceptor(checkParams = true)
+	public ResponseVO newFoloder(HttpSession session,
+						@VerifyParam(required = true) String filePid,
+						@VerifyParam(required = true) String folderName) {
+		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
+		FileInfo fileInfo = fileInfoService.newFolder(filePid, webUserDto.getUserId(), folderName);
+		return getSuccessResponseVO(fileInfo);
 	}
 }
