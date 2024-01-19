@@ -353,6 +353,49 @@ public class FileInfoServiceImpl implements FileInfoService {
     }
 
     /**
+     * 文件重命名
+     *
+     * @param fileId   文件id
+     * @param userId   用户id
+     * @param fileName 文件名称
+     * @return {@link FileInfo}
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public FileInfo rename(String fileId, String userId, String fileName) {
+        // 先检索出该文件
+        FileInfo fileInfo = fileInfoMapper.selectByFileIdAndUserId(fileId, userId);
+        if (fileInfo == null) {
+            throw new BusinessException("文件不存在");
+        }
+        // 检查是否有重名文件
+        String filePid = fileInfo.getFilePid();
+        checkFileName(filePid, userId, fileName, fileInfo.getFolderType());
+        // 由于前端传来的是不带后缀的，所以要拼接上
+        if (FileFolderTypeEnums.FILE.getType().equals(fileInfo.getFolderType())) {
+            fileName += StringTools.getFileSuffix(fileInfo.getFileName());
+        }
+        // 更新重命名后的文件
+        Date curDate = new Date();
+        FileInfo dbFile = new FileInfo();
+        dbFile.setFileName(fileName);
+        dbFile.setLastUpdateTime(curDate);
+        fileInfoMapper.updateByFileIdAndUserId(dbFile, fileId, userId);
+        // 以防万一，检索一下看数据库里是否有其他与重命名文件相同名称的文件
+        FileInfoQuery infoQuery = new FileInfoQuery();
+        infoQuery.setFilePid(filePid);
+        infoQuery.setUserId(userId);
+        infoQuery.setFileName(fileName);
+        Integer count = fileInfoMapper.selectCount(infoQuery);
+        if (count > 1) {
+            throw new BusinessException("文件名" + fileName + "已经存在");
+        }
+        fileInfo.setFileName(fileName);
+        fileInfo.setLastUpdateTime(curDate);
+        return fileInfo;
+    }
+
+    /**
      * 检查文件夹名称, 若同级目录有重名的文件夹，则抛出异常
      *
      * @param filePid    文件pid
