@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
@@ -393,6 +396,51 @@ public class FileInfoServiceImpl implements FileInfoService {
         fileInfo.setFileName(fileName);
         fileInfo.setLastUpdateTime(curDate);
         return fileInfo;
+    }
+
+    /**
+     * 改变文件文件夹
+     *
+     * @param fileIds 要移动的文件id列表
+     * @param filePid 要改变的目录id
+     * @param userId  用户id
+     */
+    @Override
+    public void changeFileFolder(String fileIds, String filePid, String userId) {
+        // 若文件id本身就是文件的上级目录id，再移动文件就无意义了。
+        if (fileIds.equals(filePid)) {
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        // 如果不是根目录，则检测要转移到的目录该用户是否存在，且该目录是否是有效的。
+        if (!Constants.ZERO_STR.equals(filePid)) {
+            FileInfo fileInfo = fileInfoService.getFileInfoByFileIdAndUserId(filePid, userId);
+            if (fileInfo == null || !FileDelFlagEnums.USING.getFlag().equals(fileInfo.getDelFlag())) {
+                throw new BusinessException(ResponseCodeEnum.CODE_600);
+            }
+        }
+        // 检索当前目录下的所有文件和文件夹，并构造一个Map，key为这些文件的文件名，value为文件本身
+        String[] fileIdList = fileIds.split(",");
+        FileInfoQuery infoQuery = new FileInfoQuery();
+        infoQuery.setFilePid(filePid);
+        infoQuery.setUserId(userId);
+        List<FileInfo> infoList = findListByParam(infoQuery);
+        Map<String, FileInfo> dbFileNameMap = infoList.stream().collect(Collectors.toMap(FileInfo::getFileName, Function.identity(), (data1, data2) -> data2));
+        // 在所有目录中检索当前要转移的文件
+        infoQuery = new FileInfoQuery();
+        infoQuery.setUserId(userId);
+        infoQuery.setFileIdArray(fileIdList);
+        List<FileInfo> selectFileList = findListByParam(infoQuery);
+        // 遍历所有要转移的文件，若该文件已经存在在要移动进的目录内，则将其重命名后再移动进去
+        for (FileInfo item : selectFileList) {
+            FileInfo fileInfo = dbFileNameMap.get(item.getFileName());
+            FileInfo updateFile = new FileInfo();
+            if (fileInfo != null) {
+                String filaName = StringTools.rename(item.getFileName());
+                updateFile.setFileName(filaName);
+            }
+            updateFile.setFilePid(filePid);
+            fileInfoMapper.updateByFileIdAndUserId(updateFile, item.getFileId(), userId);
+        }
     }
 
     /**

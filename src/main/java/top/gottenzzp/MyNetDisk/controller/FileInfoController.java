@@ -9,6 +9,7 @@ import top.gottenzzp.MyNetDisk.entity.dto.SessionWebUserDto;
 import top.gottenzzp.MyNetDisk.entity.dto.UploadResultDto;
 import top.gottenzzp.MyNetDisk.entity.enums.FileCategoryEnums;
 import top.gottenzzp.MyNetDisk.entity.enums.FileDelFlagEnums;
+import top.gottenzzp.MyNetDisk.entity.enums.FileFolderTypeEnums;
 import top.gottenzzp.MyNetDisk.entity.query.FileInfoQuery;
 import top.gottenzzp.MyNetDisk.entity.po.FileInfo;
 import top.gottenzzp.MyNetDisk.entity.vo.FileInfoVO;
@@ -18,10 +19,13 @@ import top.gottenzzp.MyNetDisk.service.FileInfoService;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import top.gottenzzp.MyNetDisk.utils.CopyTools;
+import top.gottenzzp.MyNetDisk.utils.StringTools;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.util.List;
 
 /**
  * @author GottenZZP
@@ -144,7 +148,7 @@ public class FileInfoController extends CommonFileController {
 						@VerifyParam(required = true) String fileName) {
 		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
 		FileInfo fileInfo = fileInfoService.newFolder(filePid, webUserDto.getUserId(), fileName);
-		return getSuccessResponseVO(fileInfo);
+		return getSuccessResponseVO(CopyTools.copy(fileInfo, FileInfoVO.class));
 	}
 
 	/**
@@ -161,6 +165,14 @@ public class FileInfoController extends CommonFileController {
 		return super.getFolderInfo(path, webUserDto.getUserId());
 	}
 
+	/**
+	 * 文件重命名
+	 *
+	 * @param session  会话
+	 * @param fileId   文件id
+	 * @param fileName 文件名称
+	 * @return {@link ResponseVO}
+	 */
 	@RequestMapping("/rename")
 	@GlobalInterceptor(checkParams = true)
 	public ResponseVO rename(HttpSession session,
@@ -168,8 +180,44 @@ public class FileInfoController extends CommonFileController {
 							 @VerifyParam(required = true) String fileName) {
 		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
 		FileInfo fileInfo = fileInfoService.rename(fileId, webUserDto.getUserId(), fileName);
-		return getSuccessResponseVO(fileInfo);
+		return getSuccessResponseVO(CopyTools.copy(fileInfo, FileInfoVO.class));
 	}
 
+	/**
+	 * 加载文件夹目录列表
+	 *
+	 * @param session        会话
+	 * @param filePid        文件pid
+	 * @param currentFileIds 当前文件id列表
+	 * @return {@link ResponseVO}
+	 */
+	@RequestMapping("/loadAllFolder")
+	@GlobalInterceptor(checkParams = true)
+	public ResponseVO loadAllFolder(HttpSession session,
+									@VerifyParam(required = true) String filePid,
+									String currentFileIds) {
+		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
+		// 搜索当前目录下的所有文件夹
+		FileInfoQuery infoQuery = new FileInfoQuery();
+		infoQuery.setUserId(webUserDto.getUserId());
+		infoQuery.setFilePid(filePid);
+		infoQuery.setFolderType(FileFolderTypeEnums.FOLDER.getType());
+		if (!StringTools.isEmpty(currentFileIds)) {
+			infoQuery.setExcludeFileIdArray(currentFileIds.split(","));
+		}
+		infoQuery.setDelFlag(FileDelFlagEnums.USING.getFlag());
+		infoQuery.setOrderBy("create_time desc");
+		List<FileInfo> infoList = fileInfoService.findListByParam(infoQuery);
+		return getSuccessResponseVO(CopyTools.copyList(infoList, FileInfoVO.class));
+	}
 
+	@RequestMapping("/changeFileFolder")
+	@GlobalInterceptor(checkParams = true)
+	public ResponseVO changeFileFolder(HttpSession session,
+									@VerifyParam(required = true) String fileIds,
+									   @VerifyParam(required = true) String filePid) {
+		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
+		fileInfoService.changeFileFolder(fileIds, filePid, webUserDto.getUserId());
+		return getSuccessResponseVO(null);
+	}
 }

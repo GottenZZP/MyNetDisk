@@ -119,4 +119,6 @@ public class FileInfoQuery extends BaseParam {
 	private Integer delFlag;
 
 	private String[] fileIdArray;
+
+	private String[] excludeFileIdArray;
 }
