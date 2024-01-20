@@ -211,6 +211,14 @@ public class FileInfoController extends CommonFileController {
 		return getSuccessResponseVO(CopyTools.copyList(infoList, FileInfoVO.class));
 	}
 
+	/**
+	 * 移动文件至其他文件夹
+	 *
+	 * @param session 会话
+	 * @param fileIds 文件ids
+	 * @param filePid 文件pid
+	 * @return {@link ResponseVO}
+	 */
 	@RequestMapping("/changeFileFolder")
 	@GlobalInterceptor(checkParams = true)
 	public ResponseVO changeFileFolder(HttpSession session,
@@ -219,5 +227,13 @@ public class FileInfoController extends CommonFileController {
 		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
 		fileInfoService.changeFileFolder(fileIds, filePid, webUserDto.getUserId());
 		return getSuccessResponseVO(null);
+	}
+
+	@RequestMapping("/createDownloadUrl/{fileId}")
+	@GlobalInterceptor(checkParams = true)
+	public ResponseVO createDownloadUrl(HttpSession session,
+									   @VerifyParam(required = true) @PathVariable("fileId") String fileId) {
+		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
+		return super.createDownloadUrl(fileId, webUserDto.getUserId());
 	}
 }

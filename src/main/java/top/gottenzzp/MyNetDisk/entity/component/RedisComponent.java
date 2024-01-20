@@ -2,6 +2,7 @@ package top.gottenzzp.MyNetDisk.entity.component;
 
 import org.springframework.stereotype.Component;
 import top.gottenzzp.MyNetDisk.entity.constants.Constants;
+import top.gottenzzp.MyNetDisk.entity.dto.DownloadFileDto;
 import top.gottenzzp.MyNetDisk.entity.dto.SysSettingsDto;
 import top.gottenzzp.MyNetDisk.entity.dto.UserSpaceDto;
 import top.gottenzzp.MyNetDisk.entity.po.FileInfo;
@@ -81,5 +82,9 @@ public class RedisComponent {
             return (Long) sizeObj;
         }
         return 0L;
+    }
+
+    public void saveDownloadCode(String code, DownloadFileDto downloadFileDto) {
+        redisUtils.setex(Constants.REDIS_KEY_DOWNLOAD + code, downloadFileDto, Constants.REDIS_KEY_EXPIRES_FIVE_MIN);
     }
 }

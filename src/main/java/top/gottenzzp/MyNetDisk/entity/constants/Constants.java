@@ -13,6 +13,8 @@ public class Constants {
     public static final Long MB = 1024L * 1024L;
     public static final Integer REDIS_KEY_EXPIRES_DAY = 60 * 60 * 24;
     public static final Integer REDIS_KEY_EXPIRES_HOUR = 60 * 60;
+    public static final Integer REDIS_KEY_EXPIRES_FIVE_MIN = 60 * 5;
+
     public static final String SESSION_KEY = "session_key";
     public static final String FILE_FOLDER_FILE = "/file/";
     public static final String FILE_FOLDER_AVATAR_NAME = "avatar/";
@@ -29,4 +31,5 @@ public class Constants {
     public static final String IMAGE_PNG_SUFFIX = ".png";
     public static final Integer LENGTH_150 = 150;
     public static final String ZERO_STR = "0";
+    public static final String REDIS_KEY_DOWNLOAD = "mynetdisk:download:";
 }

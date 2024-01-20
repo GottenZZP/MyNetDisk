@@ -1,13 +1,17 @@
 package top.gottenzzp.MyNetDisk.controller;
 
 import org.apache.commons.lang3.StringUtils;
+import top.gottenzzp.MyNetDisk.entity.component.RedisComponent;
 import top.gottenzzp.MyNetDisk.entity.config.AppConfig;
 import top.gottenzzp.MyNetDisk.entity.constants.Constants;
+import top.gottenzzp.MyNetDisk.entity.dto.DownloadFileDto;
 import top.gottenzzp.MyNetDisk.entity.enums.FileCategoryEnums;
 import top.gottenzzp.MyNetDisk.entity.enums.FileFolderTypeEnums;
+import top.gottenzzp.MyNetDisk.entity.enums.ResponseCodeEnum;
 import top.gottenzzp.MyNetDisk.entity.po.FileInfo;
 import top.gottenzzp.MyNetDisk.entity.query.FileInfoQuery;
 import top.gottenzzp.MyNetDisk.entity.vo.ResponseVO;
+import top.gottenzzp.MyNetDisk.exception.BusinessException;
 import top.gottenzzp.MyNetDisk.service.FileInfoService;
 import top.gottenzzp.MyNetDisk.utils.StringTools;
 
@@ -16,6 +20,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @Title: CommonFileController
@@ -28,6 +33,9 @@ public class CommonFileController extends ABaseController {
 
     @Resource
     private AppConfig appConfig;
+
+    @Resource
+    private RedisComponent redisComponent;
 
     @Resource
     private FileInfoService fileInfoService;
@@ -88,7 +96,7 @@ public class CommonFileController extends ABaseController {
      * @param userId 用户id
      * @return {@link ResponseVO}
      */
-    public ResponseVO getFolderInfo(String path, String userId) {
+    protected ResponseVO getFolderInfo(String path, String userId) {
         // 传入进来的是"xnVzRSIFAV/J2fhGMlYsO"结构的path，每个/分割开的是一个文件夹id
         String[] pathList = path.split("/");
         FileInfoQuery infoQuery = new FileInfoQuery();
@@ -100,5 +108,29 @@ public class CommonFileController extends ABaseController {
         infoQuery.setOrderBy(orderBy);
         List<FileInfo> infoList = fileInfoService.findListByParam(infoQuery);
         return getSuccessResponseVO(infoList);
+    }
+
+    /**
+     * 创建下载url
+     *
+     * @param fileId 文件id
+     * @param userId 使用者id
+     * @return {@link ResponseVO}
+     */
+    protected ResponseVO createDownloadUrl(String fileId, String userId) {
+        FileInfo fileInfo = fileInfoService.getFileInfoByFileIdAndUserId(fileId, userId);
+        // 若文件不存在或当前文件是文件夹则直接报错
+        if (fileInfo == null || FileFolderTypeEnums.FOLDER.getType().equals(fileInfo.getFolderType())) {
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        // 生成一段随机数
+        String code = UUID.randomUUID().toString();
+        DownloadFileDto fileDto = DownloadFileDto.builder()
+                                               .filePath(fileInfo.getFilePath())
+                                               .fileId(fileInfo.getFileName())
+                                               .build();
+        // 将其保存到redis当中，当用户调用下载的时候，会从redis中取该随机数
+        redisComponent.saveDownloadCode(code, fileDto);
+        return getSuccessResponseVO(code);
     }
 }
