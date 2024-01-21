@@ -32,4 +32,5 @@ public class Constants {
     public static final Integer LENGTH_150 = 150;
     public static final String ZERO_STR = "0";
     public static final String REDIS_KEY_DOWNLOAD = "mynetdisk:download:";
+    public static final Integer LENGTH_50 = 50;
 }

@@ -1,6 +1,5 @@
 package top.gottenzzp.MyNetDisk.controller;
 
-import org.apache.ibatis.annotations.Param;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 import top.gottenzzp.MyNetDisk.annotation.GlobalInterceptor;
@@ -16,13 +15,13 @@ import top.gottenzzp.MyNetDisk.entity.vo.FileInfoVO;
 import top.gottenzzp.MyNetDisk.entity.vo.PaginationResultVO;
 import top.gottenzzp.MyNetDisk.entity.vo.ResponseVO;
 import top.gottenzzp.MyNetDisk.service.FileInfoService;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import top.gottenzzp.MyNetDisk.utils.CopyTools;
 import top.gottenzzp.MyNetDisk.utils.StringTools;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.util.List;
@@ -102,6 +101,7 @@ public class FileInfoController extends CommonFileController {
 	 * @param imageFolder 图像文件夹
 	 * @param imageName   图像名称
 	 */
+	@Override
 	@RequestMapping("/getImage/{imageFolder}/{imageName}")
 	public void getImage(HttpServletResponse response, @PathVariable("imageFolder") String imageFolder, @PathVariable("imageName") String imageName) {
 		super.getImage(response, imageFolder, imageName);
@@ -138,7 +138,6 @@ public class FileInfoController extends CommonFileController {
 	 *
 	 * @param session    会话
 	 * @param filePid    文件pid
-	 * @param folderName 文件夹名称
 	 * @return {@link ResponseVO}
 	 */
 	@RequestMapping("/newFoloder")
@@ -235,5 +234,13 @@ public class FileInfoController extends CommonFileController {
 									   @VerifyParam(required = true) @PathVariable("fileId") String fileId) {
 		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
 		return super.createDownloadUrl(fileId, webUserDto.getUserId());
+	}
+
+	@Override
+	@RequestMapping("/download/{code}")
+	@GlobalInterceptor(checkParams = true, checkLogin = false)
+	public void download(HttpServletRequest request, HttpServletResponse response,
+							   @VerifyParam(required = true) @PathVariable("code") String code) throws Exception {
+		super.download(request, response, code);
 	}
 }

@@ -17,8 +17,12 @@ import top.gottenzzp.MyNetDisk.utils.StringTools;
 
 import javax.annotation.Priority;
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -124,13 +128,30 @@ public class CommonFileController extends ABaseController {
             throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
         // 生成一段随机数
-        String code = UUID.randomUUID().toString();
-        DownloadFileDto fileDto = DownloadFileDto.builder()
-                                               .filePath(fileInfo.getFilePath())
-                                               .fileId(fileInfo.getFileName())
-                                               .build();
+        String code = StringTools.getRandomString(Constants.LENGTH_50);
+        DownloadFileDto downloadFileDto = new DownloadFileDto();
+        downloadFileDto.setDownloadCode(code);
+        downloadFileDto.setFilePath(fileInfo.getFilePath());
+        downloadFileDto.setFileName(fileInfo.getFileName());
         // 将其保存到redis当中，当用户调用下载的时候，会从redis中取该随机数
-        redisComponent.saveDownloadCode(code, fileDto);
+        redisComponent.saveDownloadCode(code, downloadFileDto);
         return getSuccessResponseVO(code);
+    }
+
+    protected void download(HttpServletRequest request, HttpServletResponse response, String code) throws Exception {
+        DownloadFileDto downloadDto = redisComponent.getDownloadCode(code);
+        if (downloadDto == null) {
+            return;
+        }
+        String filePath = appConfig.getProjectFolder() + Constants.FILE_FOLDER_FILE + downloadDto.getFilePath();
+        String fileName = downloadDto.getFileName();
+        response.setContentType("application/x-msdownload; charset=UTF-8");
+        if (request.getHeader("User-Agent").toLowerCase().indexOf("msie") > 0) {
+            fileName = URLEncoder.encode(fileName, "UTF-8");
+        } else {
+            fileName = new String(fileName.getBytes("UTF-8"), "ISO8859-1");
+        }
+        response.setHeader("Content-Disposition", "attachment;filename=\"" + fileName + "\"");
+        readFile(response, filePath);
     }
 }

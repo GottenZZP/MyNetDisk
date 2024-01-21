@@ -84,7 +84,23 @@ public class RedisComponent {
         return 0L;
     }
 
+    /**
+     * 保存下载代码
+     *
+     * @param code            密码
+     * @param downloadFileDto 下载文件DTO
+     */
     public void saveDownloadCode(String code, DownloadFileDto downloadFileDto) {
         redisUtils.setex(Constants.REDIS_KEY_DOWNLOAD + code, downloadFileDto, Constants.REDIS_KEY_EXPIRES_FIVE_MIN);
+    }
+
+    /**
+     * 获取下载代码
+     *
+     * @param code 密码
+     * @return {@link DownloadFileDto}
+     */
+    public DownloadFileDto getDownloadCode(String code) {
+        return (DownloadFileDto) redisUtils.get(Constants.REDIS_KEY_DOWNLOAD + code);
     }
 }
