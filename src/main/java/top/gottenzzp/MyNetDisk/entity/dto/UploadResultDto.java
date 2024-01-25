@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 /**
+ * 上传结果dto
+ *
  * @Title: UploadResultDto
  * @Author GottenZZP
  * @Package top.gottenzzp.MyNetDisk.entity.dto

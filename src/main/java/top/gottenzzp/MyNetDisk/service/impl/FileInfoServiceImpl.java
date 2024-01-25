@@ -3,6 +3,7 @@ package top.gottenzzp.MyNetDisk.service.impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.rmi.server.SkeletonNotFoundException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -386,6 +387,7 @@ public class FileInfoServiceImpl implements FileInfoService {
         FileInfoQuery infoQuery = new FileInfoQuery();
         infoQuery.setFilePid(filePid);
         infoQuery.setUserId(userId);
+        infoQuery.setDelFlag(FileDelFlagEnums.USING.getFlag());
         infoQuery.setFileName(fileName);
         Integer count = fileInfoMapper.selectCount(infoQuery);
         if (count > 1) {
@@ -449,6 +451,7 @@ public class FileInfoServiceImpl implements FileInfoService {
      */
     @Override
     public void removeFile2RecycleBatch(String userId, String fileIds) {
+        // 待删除文件列表
         String[] fileIdList = fileIds.split(",");
         // 搜索数据库是否有要删除的文件
         FileInfoQuery infoQuery = new FileInfoQuery();
@@ -456,33 +459,139 @@ public class FileInfoServiceImpl implements FileInfoService {
         infoQuery.setFileIdArray(fileIdList);
         infoQuery.setDelFlag(FileDelFlagEnums.USING.getFlag());
         List<FileInfo> fileInfoList = fileInfoMapper.selectList(infoQuery);
+        // 如果没有要删除的文件，则直接返回
         if (fileInfoList.isEmpty()) {
             return;
         }
+        // 获取所有要删除的文件的子文件夹
         List<String> delFilePidList = new ArrayList<>();
+        // 遍历所有要删除的子目录，将其加入到删除的目录列表中
         for (FileInfo fileInfo : fileInfoList) {
             findAllSubFolderFileList(delFilePidList, userId, fileInfo.getFileId(), FileDelFlagEnums.USING.getFlag());
         }
+        // 如果删除目录列表不为空，则将设为删除状态
         if (!delFilePidList.isEmpty()) {
-            FileInfo updatefIleInfo = new FileInfo();
-            updatefIleInfo.setDelFlag(FileDelFlagEnums.DEL.getFlag());
-
-            fileInfoMapper.updateFileDelFlagBatch(updatefIleInfo, userId, delFilePidList, null, FileDelFlagEnums.USING.getFlag());
+            FileInfo updateFileInfo = new FileInfo();
+            updateFileInfo.setDelFlag(FileDelFlagEnums.DEL.getFlag());
+            fileInfoMapper.updateFileDelFlagBatch(updateFileInfo, userId, delFilePidList, null, FileDelFlagEnums.USING.getFlag());
         }
+        // 将要删除的文件设为删除状态
         List<String> delFileIdList = Arrays.asList(fileIdList);
         FileInfo fileInfo = new FileInfo();
+        fileInfo.setRecoveryTime(new Date());
         fileInfo.setDelFlag(FileDelFlagEnums.RECYCLE.getFlag());
         fileInfoMapper.updateFileDelFlagBatch(fileInfo, userId, null, delFileIdList, FileDelFlagEnums.USING.getFlag());
     }
 
+    /**
+     * 批量恢复文件
+     *
+     * @param userId  用户id
+     * @param fileIds 文件ids
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void recoverFileBatch(String userId, String fileIds) {
+        String[] fileList = fileIds.split(",");
+        FileInfoQuery infoQuery = new FileInfoQuery();
+        infoQuery.setFileIdArray(fileList);
+        infoQuery.setUserId(userId);
+        infoQuery.setDelFlag(FileDelFlagEnums.RECYCLE.getFlag());
+        List<FileInfo> fileInfoList = fileInfoMapper.selectList(infoQuery);
+        ArrayList<String> delSubFile = new ArrayList<>();
+        for (FileInfo fileInfo : fileInfoList) {
+            if (FileFolderTypeEnums.FOLDER.getType().equals(fileInfo.getFolderType())) {
+                findAllSubFolderFileList(delSubFile, userId, fileInfo.getFileId(), FileDelFlagEnums.DEL.getFlag());
+            }
+        }
+        // 查询所有根目录文件
+        infoQuery = new FileInfoQuery();
+        infoQuery.setUserId(userId);
+        infoQuery.setDelFlag(FileDelFlagEnums.USING.getFlag());
+        infoQuery.setFilePid(Constants.ZERO_STR);
+        List<FileInfo> infoList = findListByParam(infoQuery);
+        Map<String, FileInfo> rootFileMap = infoList.stream().collect(Collectors.toMap(FileInfo::getFileName, Function.identity(), (data1, data2) -> data2));
+
+        // 查询所有所选文件，将目录下的所有删除的文件更新为使用中
+        if (!delSubFile.isEmpty()) {
+            FileInfo fileInfo = new FileInfo();
+            fileInfo.setDelFlag(FileDelFlagEnums.USING.getFlag());
+            fileInfoMapper.updateFileDelFlagBatch(fileInfo, userId, delSubFile, null, FileDelFlagEnums.DEL.getFlag());
+        }
+
+        // 将选中的文件更新为正常，从父级目录到根目录
+        List<String> delFileList = Arrays.asList(fileList);
+        FileInfo fileInfo = new FileInfo();
+        fileInfo.setDelFlag(FileDelFlagEnums.USING.getFlag());
+        fileInfo.setFilePid(Constants.ZERO_STR);
+        fileInfo.setLastUpdateTime(new Date());
+        fileInfoMapper.updateFileDelFlagBatch(fileInfo, userId, null, delFileList, FileDelFlagEnums.RECYCLE.getFlag());
+
+        // 将所选文件重命名
+        for (FileInfo info : fileInfoList) {
+            FileInfo rootFileInfo = rootFileMap.get(info.getFileName());
+            if (rootFileInfo != null) {
+                String rename = StringTools.rename(info.getFileName());
+                FileInfo updateInfo = new FileInfo();
+                updateInfo.setFileName(rename);
+                fileInfoMapper.updateByFileIdAndUserId(updateInfo, info.getFileId(), userId);
+            }
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void delFileBatch(String userId, String fileIds, Boolean adminOp) {
+        String[] fileIdList = fileIds.split(",");
+        FileInfoQuery infoQuery = new FileInfoQuery();
+        infoQuery.setUserId(userId);
+        infoQuery.setFileIdArray(fileIdList);
+        infoQuery.setDelFlag(FileDelFlagEnums.RECYCLE.getFlag());
+        List<FileInfo> fileInfoList = fileInfoMapper.selectList(infoQuery);
+
+        ArrayList<String> listAllSubfolders = new ArrayList<>();
+        // 获取所选文件的子目录ID
+        for (FileInfo fileInfo : fileInfoList) {
+            if (FileFolderTypeEnums.FOLDER.getType().equals(fileInfo.getFolderType())) {
+                findAllSubFolderFileList(listAllSubfolders, userId, fileInfo.getFileId(), FileDelFlagEnums.DEL.getFlag());
+            }
+        }
+        // 删除所选目录
+        if (!listAllSubfolders.isEmpty()) {
+            fileInfoMapper.delFileBatch(userId, listAllSubfolders, null, adminOp ? null : FileDelFlagEnums.DEL.getFlag());
+        }
+        // 删除所选文件
+        fileInfoMapper.delFileBatch(userId, null, Arrays.asList(fileIdList), FileDelFlagEnums.RECYCLE.getFlag());
+        // 更新用户空间
+        Long useSpace = fileInfoMapper.selectUseSpace(userId);
+        UserInfo userInfo = new UserInfo();
+        userInfo.setUseSpace(useSpace);
+        userInfoMapper.updateByUserId(userInfo, userId);
+        // 设置缓存
+        UserSpaceDto spaceDto = redisComponent.getUserSpaceUse(userId);
+        spaceDto.setUseSpace(useSpace);
+        redisComponent.saveUserSpaceUse(userId, spaceDto);
+    }
+
+    /**
+     * 获取fileId下的所有子文件夹
+     *
+     * @param delFilePidList 删除文件pid列表
+     * @param userId         使用者id
+     * @param fileId         文件id
+     * @param flag           删除标记
+     */
     private void findAllSubFolderFileList(List<String> delFilePidList, String userId, String fileId, Integer flag) {
+        // 将当前文件加入到删除文件pid列表中
         delFilePidList.add(fileId);
+        // 检索当前文件夹下的所有文件
         FileInfoQuery infoQuery = new FileInfoQuery();
         infoQuery.setUserId(userId);
         infoQuery.setFilePid(fileId);
         infoQuery.setDelFlag(flag);
         infoQuery.setFolderType(FileFolderTypeEnums.FOLDER.getType());
         List<FileInfo> fileInfoList = fileInfoMapper.selectList(infoQuery);
+        // 递归遍历所有文件，将其加入到删除文件pid列表中
         for (FileInfo fileInfo : fileInfoList) {
             findAllSubFolderFileList(delFilePidList, userId, fileInfo.getFileId(), flag);
         }
@@ -501,6 +610,7 @@ public class FileInfoServiceImpl implements FileInfoService {
         infoQuery.setFolderType(folderType);
         infoQuery.setFilePid(filePid);
         infoQuery.setUserId(userId);
+        infoQuery.setDelFlag(FileDelFlagEnums.USING.getFlag());
         infoQuery.setFileName(folderName);
         Integer count = fileInfoMapper.selectCount(infoQuery);
         if (count > 0) {

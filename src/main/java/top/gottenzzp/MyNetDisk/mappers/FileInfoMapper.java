@@ -4,6 +4,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import top.gottenzzp.MyNetDisk.entity.po.FileInfo;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -62,4 +63,9 @@ public interface FileInfoMapper<T, P> extends BaseMapper<T, P> {
                                 @Param("filePidList") List<String> filePidList,
                                 @Param("fileIdList") List<String> fileIdList,
                                 @Param("oldDelFlag") Integer oldDelFlag);
+
+    void delFileBatch(@Param("userId") String userId,
+                      @Param("filePidList") List<String> filePidList,
+                      @Param("fileIdList") List<String> fileIdList,
+                      @Param("oldDelFlag") Integer oldDelFlag);
 }
