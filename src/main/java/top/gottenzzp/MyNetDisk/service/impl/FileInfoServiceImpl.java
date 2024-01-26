@@ -263,10 +263,10 @@ public class FileInfoServiceImpl implements FileInfoService {
             }
             File newFile = new File(tempFolder.getPath() + "/" + chunkIndex);
             file.transferTo(newFile);
+            // 保存当前分片大小到redis
+            redisComponent.saveFileTempSize(webUserDto.getUserId(), fileId, file.getSize());
             // 如果不是最后一个分片，则将每次的分片大小累加到redis中，方便后续计算用户空间时不用每次都从数据库里取，减少数据库的IO操作
             if (chunkIndex < chunks - 1) {
-                // 保存当前分片大小到redis
-                redisComponent.saveFileTempSize(webUserDto.getUserId(), fileId, file.getSize());
                 resultDto.setStatus(UploadStatusEnums.UPLOADING.getCode());
                 return resultDto;
             }

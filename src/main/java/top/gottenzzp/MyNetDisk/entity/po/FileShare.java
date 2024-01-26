@@ -2,6 +2,9 @@ package top.gottenzzp.MyNetDisk.entity.po;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Date;
+
+import lombok.Getter;
+import lombok.Setter;
 import top.gottenzzp.MyNetDisk.entity.enums.DateTimePatternEnum;
 import top.gottenzzp.MyNetDisk.utils.DateUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -11,8 +14,11 @@ import java.io.Serializable;
 
 
 /**
- * 
+ *
+ * @author gottenzzp
  */
+@Setter
+@Getter
 public class FileShare implements Serializable {
 
 
@@ -60,70 +66,13 @@ public class FileShare implements Serializable {
 	 */
 	private Integer showCount;
 
+	private String fileName;
 
-	public void setShareId(String shareId){
-		this.shareId = shareId;
-	}
+	private String fileCover;
 
-	public String getShareId(){
-		return this.shareId;
-	}
-
-	public void setFileId(String fileId){
-		this.fileId = fileId;
-	}
-
-	public String getFileId(){
-		return this.fileId;
-	}
-
-	public void setUserId(String userId){
-		this.userId = userId;
-	}
-
-	public String getUserId(){
-		return this.userId;
-	}
-
-	public void setValidType(Integer validType){
-		this.validType = validType;
-	}
-
-	public Integer getValidType(){
-		return this.validType;
-	}
-
-	public void setExpireTime(Date expireTime){
-		this.expireTime = expireTime;
-	}
-
-	public Date getExpireTime(){
-		return this.expireTime;
-	}
-
-	public void setShareTime(Date shareTime){
-		this.shareTime = shareTime;
-	}
-
-	public Date getShareTime(){
-		return this.shareTime;
-	}
-
-	public void setCode(String code){
-		this.code = code;
-	}
-
-	public String getCode(){
-		return this.code;
-	}
-
-	public void setShowCount(Integer showCount){
-		this.showCount = showCount;
-	}
-
-	public Integer getShowCount(){
-		return this.showCount;
-	}
+	private Integer folderType;
+	private Integer fileCategory;
+	private Integer fileType;
 
 	@Override
 	public String toString (){

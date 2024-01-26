@@ -34,6 +34,7 @@ public class FileShareController extends ABaseController{
 		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
 		query.setOrderBy("share_time desc");
 		query.setUserId(webUserDto.getUserId());
+		query.setQueryFileName(true);
 		return getSuccessResponseVO(fileShareService.findListByPage(query));
 	}
 
@@ -47,7 +48,7 @@ public class FileShareController extends ABaseController{
 	 * @return {@link ResponseVO}
 	 */
 	@RequestMapping("/shareFile")
-	@GlobalInterceptor(checkLogin = true)
+	@GlobalInterceptor(checkParams = true)
 	public ResponseVO shareFile(HttpSession session,
 								@VerifyParam(required = true) String fileId,
 								@VerifyParam(required = true) Integer validType,
@@ -60,5 +61,21 @@ public class FileShareController extends ABaseController{
 		fileShare.setUserId(webUserDto.getUserId());
 		fileShareService.saveShare(fileShare);
 		return getSuccessResponseVO(fileShare);
+	}
+
+	/**
+	 * 取消共享
+	 *
+	 * @param session  会话
+	 * @param shareIds 共享ID
+	 * @return {@link ResponseVO}
+	 */
+	@RequestMapping("/cancelShare")
+	@GlobalInterceptor(checkParams = true)
+	public ResponseVO cancelShare(HttpSession session,
+								@VerifyParam(required = true) String shareIds){
+		SessionWebUserDto webUserDto = getUserInfoFromSession(session);
+		fileShareService.batchDeletionSharedFiles(shareIds.split(","), webUserDto.getUserId());
+		return getSuccessResponseVO(null);
 	}
 }

@@ -25,4 +25,11 @@ public interface FileShareMapper<T,P> extends BaseMapper<T,P> {
 	 T selectByShareId(@Param("shareId") String shareId);
 
 
+	/**
+	 * 批量删除共享文件
+	 *
+	 * @param shareIds 共享ID
+	 * @param userId   用户id
+	 */
+	Integer batchDeletionSharedFiles(@Param("shareIds") String[] shareIds, @Param("userId") String userId);
 }

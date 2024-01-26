@@ -160,4 +160,18 @@ public class FileShareServiceImpl implements FileShareService {
 		// 插入数据库
 		fileShareMapper.insert(fileShare);
 	}
+
+	/**
+	 * 批量删除共享文件
+	 *
+	 * @param shareIds 共享ID
+	 * @param userId   用户id
+	 */
+	@Override
+    public void batchDeletionSharedFiles(String[] shareIds, String userId) {
+		Integer count = fileShareMapper.batchDeletionSharedFiles(shareIds, userId);
+		if (count != shareIds.length) {
+			throw new BusinessException(ResponseCodeEnum.CODE_600);
+		}
+	}
 }

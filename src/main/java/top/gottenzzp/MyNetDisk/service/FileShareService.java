@@ -70,4 +70,6 @@ public interface FileShareService {
 	Integer deleteFileShareByShareId(String shareId);
 
 	void saveShare(FileShare fileShare);
+
+	void batchDeletionSharedFiles(String[] shareIds, String userId);
 }
