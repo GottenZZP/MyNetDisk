@@ -9,6 +9,6 @@ import java.io.Serializable;
 public class SessionWebUserDto implements Serializable {
     private String nickName;
     private String userId;
-    private Boolean isAdmin;
+    private Boolean admin;
     private String avatar;
 }

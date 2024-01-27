@@ -97,7 +97,7 @@ public class GlobalOperationAspect {
             throw new BusinessException(ResponseCodeEnum.CODE_901);
         }
         // 若需要校验管理员权限，且当前用户不是管理员，则抛出异常
-        if (checkAdmin && !userDto.getIsAdmin()) {
+        if (checkAdmin && !userDto.getAdmin()) {
             throw new BusinessException(ResponseCodeEnum.CODE_404);
         }
     }

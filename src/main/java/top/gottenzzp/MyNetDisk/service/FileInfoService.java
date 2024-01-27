@@ -2,6 +2,7 @@ package top.gottenzzp.MyNetDisk.service;
 
 import java.util.List;
 
+import org.apache.ibatis.annotations.Param;
 import org.springframework.web.multipart.MultipartFile;
 import top.gottenzzp.MyNetDisk.entity.dto.SessionWebUserDto;
 import top.gottenzzp.MyNetDisk.entity.dto.UploadResultDto;
@@ -151,4 +152,6 @@ public interface FileInfoService {
 	 * @param adminOp 管理员操作
 	 */
 	void delFileBatch(String userId, String fileIds, Boolean adminOp);
+
+	Long getUserUseSpace(@Param("userId") String userId);
 }

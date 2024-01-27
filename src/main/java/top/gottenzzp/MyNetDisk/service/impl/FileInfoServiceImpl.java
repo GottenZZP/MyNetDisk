@@ -573,6 +573,11 @@ public class FileInfoServiceImpl implements FileInfoService {
         redisComponent.saveUserSpaceUse(userId, spaceDto);
     }
 
+    @Override
+    public Long getUserUseSpace(String userId) {
+        return fileInfoMapper.selectUseSpace(userId);
+    }
+
     /**
      * 获取fileId下的所有子文件夹
      *

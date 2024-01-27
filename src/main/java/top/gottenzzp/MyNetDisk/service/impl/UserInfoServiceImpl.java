@@ -34,6 +34,7 @@ import top.gottenzzp.MyNetDisk.exception.BusinessException;
 import top.gottenzzp.MyNetDisk.mappers.FileInfoMapper;
 import top.gottenzzp.MyNetDisk.mappers.UserInfoMapper;
 import top.gottenzzp.MyNetDisk.service.EmailCodeService;
+import top.gottenzzp.MyNetDisk.service.FileInfoService;
 import top.gottenzzp.MyNetDisk.service.UserInfoService;
 import top.gottenzzp.MyNetDisk.utils.JsonUtils;
 import top.gottenzzp.MyNetDisk.utils.OKHttpUtils;
@@ -50,6 +51,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 
 	@Resource
 	private UserInfoMapper<UserInfo, UserInfoQuery> userInfoMapper;
+
+	@Resource
+	private FileInfoService fileInfoService;
 
 	@Resource
 	private EmailCodeService emailCodeService;
@@ -244,13 +248,13 @@ public class UserInfoServiceImpl implements UserInfoService {
 		sessionWebUserDto.setUserId(userInfo.getUserId());
 		sessionWebUserDto.setNickName(userInfo.getNickName());
 		if (ArrayUtils.contains(appConfig.getAdminEmails().split(","), email)) {
-			sessionWebUserDto.setIsAdmin(true);
+			sessionWebUserDto.setAdmin(true);
 		} else {
-			sessionWebUserDto.setIsAdmin(false);
+			sessionWebUserDto.setAdmin(false);
 		}
 
 		UserSpaceDto userSpaceDto = new UserSpaceDto();
-		userSpaceDto.setUseSpace(fileInfoMapper.selectUseSpace(userInfo.getUserId()));
+		userSpaceDto.setUseSpace(fileInfoService.getUserUseSpace(sessionWebUserDto.getUserId()));
 		userSpaceDto.setTotalSpace(userInfo.getTotalSpace());
 		redisComponent.saveUserSpaceUse(userInfo.getUserId(), userSpaceDto);
 		return sessionWebUserDto;
@@ -310,9 +314,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 		sessionWebUserDto.setNickName(userInfo.getNickName());
 		sessionWebUserDto.setAvatar(avatar);
 		if (ArrayUtils.contains(appConfig.getAdminEmails().split(","), userInfo.getEmail() == null ? "" : userInfo.getEmail())) {
-			sessionWebUserDto.setIsAdmin(true);
+			sessionWebUserDto.setAdmin(true);
 		} else {
-			sessionWebUserDto.setIsAdmin(false);
+			sessionWebUserDto.setAdmin(false);
 		}
 
 		UserSpaceDto userSpaceDto = new UserSpaceDto();
