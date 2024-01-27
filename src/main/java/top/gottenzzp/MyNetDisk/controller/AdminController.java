@@ -76,7 +76,7 @@ public class AdminController extends ABaseController {
     @RequestMapping("/loadUserList")
     @GlobalInterceptor(checkParams = true, checkAdmin = true)
     public ResponseVO loadUserList(UserInfoQuery userInfoQuery) {
-        userInfoQuery.setOrderBy("join_time desc");
+        userInfoQuery.setOrderBy("register_time desc");
         PaginationResultVO<UserInfo> resultVO = userInfoService.findListByPage(userInfoQuery);
         return getSuccessResponseVO(convert2PaginationVO(resultVO, UserInfoVO.class));
     }
@@ -86,6 +86,14 @@ public class AdminController extends ABaseController {
     public ResponseVO updateUserStatus(@VerifyParam(required = true) String userId,
                                        @VerifyParam(required = true) Integer status) {
         userInfoService.updateUserStatus(userId, status);
+        return getSuccessResponseVO(null);
+    }
+
+    @RequestMapping("/updateUserSpace")
+    @GlobalInterceptor(checkParams = true, checkAdmin = true)
+    public ResponseVO updateUserSpace(@VerifyParam(required = true) String userId,
+                                       @VerifyParam(required = true) Integer changeSpace) {
+        userInfoService.changeUserSpace(userId, changeSpace);
         return getSuccessResponseVO(null);
     }
 }

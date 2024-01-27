@@ -338,6 +338,13 @@ public class UserInfoServiceImpl implements UserInfoService {
 		userInfoMapper.updateByUserId(userInfo, userId);
 	}
 
+	@Override
+	public void changeUserSpace(String userId, Integer changeSpace) {
+		Long space = changeSpace * Constants.MB;
+		userInfoMapper.updateUserSpace(userId, null, space);
+		redisComponent.resetUserSpaceUse(userId);
+	}
+
 	private String getQqAccessToken(String code) {
 		/*
 		  返回结果是字符串 access_token=*&expires_in=7776000&refresh_token=* 返回错误 callback({UcWebConstants.VIEW_OBJ_RESULT_KEY:111,error_description:"error msg"})

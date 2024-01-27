@@ -6,8 +6,11 @@ import top.gottenzzp.MyNetDisk.entity.dto.DownloadFileDto;
 import top.gottenzzp.MyNetDisk.entity.dto.SysSettingsDto;
 import top.gottenzzp.MyNetDisk.entity.dto.UserSpaceDto;
 import top.gottenzzp.MyNetDisk.entity.po.FileInfo;
+import top.gottenzzp.MyNetDisk.entity.po.UserInfo;
 import top.gottenzzp.MyNetDisk.entity.query.FileInfoQuery;
+import top.gottenzzp.MyNetDisk.entity.query.UserInfoQuery;
 import top.gottenzzp.MyNetDisk.mappers.FileInfoMapper;
+import top.gottenzzp.MyNetDisk.mappers.UserInfoMapper;
 
 import javax.annotation.Resource;
 
@@ -15,6 +18,9 @@ import javax.annotation.Resource;
 public class RedisComponent {
     @Resource
     private RedisUtils redisUtils;
+
+    @Resource
+    private UserInfoMapper<UserInfo, UserInfoQuery> userInfoMapper;
 
     @Resource
     private FileInfoMapper<FileInfo, FileInfoQuery> fileInfoMapper;
@@ -106,5 +112,15 @@ public class RedisComponent {
 
     public void saveSysSettingsDto(SysSettingsDto sysSettingsDto) {
         redisUtils.set(Constants.REDIS_KEY_SYS_SETTINGS, sysSettingsDto);
+    }
+
+    public UserSpaceDto resetUserSpaceUse(String userId) {
+        UserSpaceDto userSpaceDto = new UserSpaceDto();
+        Long useSpace = fileInfoMapper.selectUseSpace(userId);
+        userSpaceDto.setUseSpace(useSpace);
+        UserInfo userInfo = userInfoMapper.selectByUserId(userId);
+        userSpaceDto.setTotalSpace(userInfo.getTotalSpace());
+        redisUtils.setex(Constants.REDIS_KEY_USER_SPACE_USE + userId, userSpaceDto, Constants.REDIS_KEY_EXPIRES_DAY);
+        return userSpaceDto;
     }
 }

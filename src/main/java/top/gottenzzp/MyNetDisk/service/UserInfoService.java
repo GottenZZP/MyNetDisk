@@ -114,4 +114,12 @@ public interface UserInfoService {
 	 * @param status 状态
 	 */
 	void updateUserStatus(String userId, Integer status);
+
+	/**
+	 * 改变用户空间大小
+	 *
+	 * @param userId      用户id
+	 * @param changeSpace 变更空间
+	 */
+	void changeUserSpace(String userId, Integer changeSpace);
 }
