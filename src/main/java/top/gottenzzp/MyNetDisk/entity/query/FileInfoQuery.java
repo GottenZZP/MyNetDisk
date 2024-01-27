@@ -121,4 +121,6 @@ public class FileInfoQuery extends BaseParam {
 	private String[] fileIdArray;
 
 	private String[] excludeFileIdArray;
+
+	private Boolean queryNickName;
 }

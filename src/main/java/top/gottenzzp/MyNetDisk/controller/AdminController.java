@@ -6,8 +6,12 @@ import top.gottenzzp.MyNetDisk.annotation.GlobalInterceptor;
 import top.gottenzzp.MyNetDisk.annotation.VerifyParam;
 import top.gottenzzp.MyNetDisk.entity.component.RedisComponent;
 import top.gottenzzp.MyNetDisk.entity.dto.SysSettingsDto;
+import top.gottenzzp.MyNetDisk.entity.po.FileInfo;
 import top.gottenzzp.MyNetDisk.entity.po.UserInfo;
+import top.gottenzzp.MyNetDisk.entity.query.FileInfoQuery;
+import top.gottenzzp.MyNetDisk.entity.query.FileShareQuery;
 import top.gottenzzp.MyNetDisk.entity.query.UserInfoQuery;
+import top.gottenzzp.MyNetDisk.entity.vo.FileInfoVO;
 import top.gottenzzp.MyNetDisk.entity.vo.PaginationResultVO;
 import top.gottenzzp.MyNetDisk.entity.vo.ResponseVO;
 import top.gottenzzp.MyNetDisk.entity.vo.UserInfoVO;
@@ -95,5 +99,20 @@ public class AdminController extends ABaseController {
                                        @VerifyParam(required = true) Integer changeSpace) {
         userInfoService.changeUserSpace(userId, changeSpace);
         return getSuccessResponseVO(null);
+    }
+
+    /**
+     * 加载文件列表
+     *
+     * @param fileInfoQuery 文件信息查询
+     * @return {@link ResponseVO}
+     */
+    @RequestMapping("/loadFileList")
+    @GlobalInterceptor(checkParams = true, checkAdmin = true)
+    public ResponseVO loadFileList(FileInfoQuery fileInfoQuery) {
+        fileInfoQuery.setOrderBy("last_update_time desc");
+        fileInfoQuery.setQueryNickName(true);
+        PaginationResultVO<FileInfo> resultVO = fileInfoService.findListByPage(fileInfoQuery);
+        return getSuccessResponseVO(resultVO);
     }
 }
