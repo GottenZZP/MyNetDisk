@@ -6,8 +6,13 @@ import top.gottenzzp.MyNetDisk.annotation.GlobalInterceptor;
 import top.gottenzzp.MyNetDisk.annotation.VerifyParam;
 import top.gottenzzp.MyNetDisk.entity.component.RedisComponent;
 import top.gottenzzp.MyNetDisk.entity.dto.SysSettingsDto;
+import top.gottenzzp.MyNetDisk.entity.po.UserInfo;
+import top.gottenzzp.MyNetDisk.entity.query.UserInfoQuery;
+import top.gottenzzp.MyNetDisk.entity.vo.PaginationResultVO;
 import top.gottenzzp.MyNetDisk.entity.vo.ResponseVO;
+import top.gottenzzp.MyNetDisk.entity.vo.UserInfoVO;
 import top.gottenzzp.MyNetDisk.service.FileInfoService;
+import top.gottenzzp.MyNetDisk.service.UserInfoService;
 
 import javax.annotation.Resource;
 
@@ -27,6 +32,9 @@ public class AdminController extends ABaseController {
     @Resource
     private RedisComponent redisComponent;
 
+    @Resource
+    private UserInfoService userInfoService;
+
     /**
      * 获取系统设置
      *
@@ -42,7 +50,7 @@ public class AdminController extends ABaseController {
      * 保存系统设置
      *
      * @param registerEmailTitle  注册电子邮件标题
-     * @param registerMailContent 注册邮件内容
+     * @param registerEmailContent 注册邮件内容
      * @param userInitUseSpace    用户初始化使用空间
      * @return {@link ResponseVO}
      */
@@ -57,5 +65,19 @@ public class AdminController extends ABaseController {
         sysSettingsDto.setUserInitUseSpace(userInitUseSpace);
         redisComponent.saveSysSettingsDto(sysSettingsDto);
         return getSuccessResponseVO(null);
+    }
+
+    /**
+     * 加载用户列表
+     *
+     * @param userInfoQuery 用户信息查询
+     * @return {@link ResponseVO}
+     */
+    @RequestMapping("/loadUserList")
+    @GlobalInterceptor(checkParams = true, checkAdmin = true)
+    public ResponseVO loadUserList(UserInfoQuery userInfoQuery) {
+        userInfoQuery.setOrderBy("join_time desc");
+        PaginationResultVO<UserInfo> resultVO = userInfoService.findListByPage(userInfoQuery);
+        return getSuccessResponseVO(convert2PaginationVO(resultVO, UserInfoVO.class));
     }
 }
