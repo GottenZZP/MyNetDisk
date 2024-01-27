@@ -103,4 +103,8 @@ public class RedisComponent {
     public DownloadFileDto getDownloadCode(String code) {
         return (DownloadFileDto) redisUtils.get(Constants.REDIS_KEY_DOWNLOAD + code);
     }
+
+    public void saveSysSettingsDto(SysSettingsDto sysSettingsDto) {
+        redisUtils.set(Constants.REDIS_KEY_SYS_SETTINGS, sysSettingsDto);
+    }
 }
