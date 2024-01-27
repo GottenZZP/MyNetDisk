@@ -106,4 +106,12 @@ public interface UserInfoService {
     void resetPwd(String email, String password, String emailCode);
 
     SessionWebUserDto qqLogin(String code);
+
+	/**
+	 * 更新用户状态
+	 *
+	 * @param userId 用户id
+	 * @param status 状态
+	 */
+	void updateUserStatus(String userId, Integer status);
 }

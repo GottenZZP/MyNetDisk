@@ -326,6 +326,18 @@ public class UserInfoServiceImpl implements UserInfoService {
 		return sessionWebUserDto;
 	}
 
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public void updateUserStatus(String userId, Integer status) {
+		UserInfo userInfo = new UserInfo();
+		userInfo.setStatus(status);
+		if (UserStatusEnum.DISABLE.getStatus().equals(status)) {
+			userInfo.setUseSpace(0L);
+			fileInfoMapper.deleteFileByUserId(userId);
+		}
+		userInfoMapper.updateByUserId(userInfo, userId);
+	}
+
 	private String getQqAccessToken(String code) {
 		/*
 		  返回结果是字符串 access_token=*&expires_in=7776000&refresh_token=* 返回错误 callback({UcWebConstants.VIEW_OBJ_RESULT_KEY:111,error_description:"error msg"})

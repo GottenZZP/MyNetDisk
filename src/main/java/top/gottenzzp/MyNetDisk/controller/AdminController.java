@@ -80,4 +80,12 @@ public class AdminController extends ABaseController {
         PaginationResultVO<UserInfo> resultVO = userInfoService.findListByPage(userInfoQuery);
         return getSuccessResponseVO(convert2PaginationVO(resultVO, UserInfoVO.class));
     }
+
+    @RequestMapping("/updateUserStatus")
+    @GlobalInterceptor(checkParams = true, checkAdmin = true)
+    public ResponseVO updateUserStatus(@VerifyParam(required = true) String userId,
+                                       @VerifyParam(required = true) Integer status) {
+        userInfoService.updateUserStatus(userId, status);
+        return getSuccessResponseVO(null);
+    }
 }

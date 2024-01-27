@@ -68,4 +68,11 @@ public interface FileInfoMapper<T, P> extends BaseMapper<T, P> {
                       @Param("filePidList") List<String> filePidList,
                       @Param("fileIdList") List<String> fileIdList,
                       @Param("oldDelFlag") Integer oldDelFlag);
+
+    /**
+     * 删去文件通过用户id
+     *
+     * @param userId 用户id
+     */
+    void deleteFileByUserId(@Param("userId") String userId);
 }
