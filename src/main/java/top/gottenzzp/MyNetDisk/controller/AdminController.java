@@ -131,7 +131,7 @@ public class AdminController extends CommonFileController {
     @RequestMapping("/getFolderInfo")
     @GlobalInterceptor(checkParams = true, checkAdmin = true)
     public ResponseVO getFolderInfo(@VerifyParam(required = true) String path) {
-        return getSuccessResponseVO(super.getFolderInfo(path, null));
+        return super.getFolderInfo(path, null);
     }
 
     @Override
@@ -151,7 +151,6 @@ public class AdminController extends CommonFileController {
      * @param userId   用户id
      * @param fileId   文件id
      */
-    @Override
     @RequestMapping("/ts/getVideoInfo/{userId}/{fileId}")
     @GlobalInterceptor(checkParams = true, checkAdmin = true)
     public void getVideoInfo(
