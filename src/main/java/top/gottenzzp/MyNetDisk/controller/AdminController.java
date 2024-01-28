@@ -9,6 +9,7 @@ import top.gottenzzp.MyNetDisk.annotation.VerifyParam;
 import top.gottenzzp.MyNetDisk.entity.component.RedisComponent;
 import top.gottenzzp.MyNetDisk.entity.dto.SessionWebUserDto;
 import top.gottenzzp.MyNetDisk.entity.dto.SysSettingsDto;
+import top.gottenzzp.MyNetDisk.entity.enums.FileDelFlagEnums;
 import top.gottenzzp.MyNetDisk.entity.po.FileInfo;
 import top.gottenzzp.MyNetDisk.entity.po.UserInfo;
 import top.gottenzzp.MyNetDisk.entity.query.FileInfoQuery;
@@ -186,7 +187,7 @@ public class AdminController extends CommonFileController {
 
     @RequestMapping("/delFile")
     @GlobalInterceptor(checkParams = true, checkAdmin = true)
-    public ResponseVO delFile(@VerifyParam(required = true) String fileIdAndUserIds) throws Exception {
+    public ResponseVO delFile(@VerifyParam(required = true) String fileIdAndUserIds) {
         String[] fileIdAndUserIdArray = fileIdAndUserIds.split(",");
         for (String fileIdAndUserId : fileIdAndUserIdArray) {
             String[] itemArray = fileIdAndUserId.split("_");

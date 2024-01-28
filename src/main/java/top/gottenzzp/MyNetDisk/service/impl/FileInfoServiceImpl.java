@@ -546,7 +546,9 @@ public class FileInfoServiceImpl implements FileInfoService {
         FileInfoQuery infoQuery = new FileInfoQuery();
         infoQuery.setUserId(userId);
         infoQuery.setFileIdArray(fileIdList);
-        infoQuery.setDelFlag(FileDelFlagEnums.RECYCLE.getFlag());
+        if (!adminOp) {
+            infoQuery.setDelFlag(FileDelFlagEnums.RECYCLE.getFlag());
+        }
         List<FileInfo> fileInfoList = fileInfoMapper.selectList(infoQuery);
 
         ArrayList<String> listAllSubfolders = new ArrayList<>();
@@ -561,7 +563,7 @@ public class FileInfoServiceImpl implements FileInfoService {
             fileInfoMapper.delFileBatch(userId, listAllSubfolders, null, adminOp ? null : FileDelFlagEnums.DEL.getFlag());
         }
         // 删除所选文件
-        fileInfoMapper.delFileBatch(userId, null, Arrays.asList(fileIdList), FileDelFlagEnums.RECYCLE.getFlag());
+        fileInfoMapper.delFileBatch(userId, null, Arrays.asList(fileIdList), adminOp ? null : FileDelFlagEnums.RECYCLE.getFlag());
         // 更新用户空间
         Long useSpace = fileInfoMapper.selectUseSpace(userId);
         UserInfo userInfo = new UserInfo();

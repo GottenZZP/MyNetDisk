@@ -10,9 +10,12 @@ import top.gottenzzp.MyNetDisk.entity.enums.FileFolderTypeEnums;
 import top.gottenzzp.MyNetDisk.entity.enums.ResponseCodeEnum;
 import top.gottenzzp.MyNetDisk.entity.po.FileInfo;
 import top.gottenzzp.MyNetDisk.entity.query.FileInfoQuery;
+import top.gottenzzp.MyNetDisk.entity.vo.FileInfoVO;
+import top.gottenzzp.MyNetDisk.entity.vo.FolderVO;
 import top.gottenzzp.MyNetDisk.entity.vo.ResponseVO;
 import top.gottenzzp.MyNetDisk.exception.BusinessException;
 import top.gottenzzp.MyNetDisk.service.FileInfoService;
+import top.gottenzzp.MyNetDisk.utils.CopyTools;
 import top.gottenzzp.MyNetDisk.utils.StringTools;
 
 import javax.annotation.Priority;
@@ -101,7 +104,7 @@ public class CommonFileController extends ABaseController {
      * @return {@link ResponseVO}
      */
     protected ResponseVO getFolderInfo(String path, String userId) {
-        // 传入进来的是"xnVzRSIFAV/J2fhGMlYsO"结构的path，每个/分割开的是一个文件夹id
+        // 传入进来的是"xnVzRSIFAV/J2f·hGMlYsO"结构的path，每个/分割开的是一个文件夹id
         String[] pathList = path.split("/");
         FileInfoQuery infoQuery = new FileInfoQuery();
         infoQuery.setUserId(userId);
@@ -111,7 +114,7 @@ public class CommonFileController extends ABaseController {
         String orderBy = "field(file_id,\"" + StringUtils.join(pathList, "\",\"") + "\")";
         infoQuery.setOrderBy(orderBy);
         List<FileInfo> infoList = fileInfoService.findListByParam(infoQuery);
-        return getSuccessResponseVO(infoList);
+        return getSuccessResponseVO(CopyTools.copyList(infoList, FolderVO.class));
     }
 
     /**

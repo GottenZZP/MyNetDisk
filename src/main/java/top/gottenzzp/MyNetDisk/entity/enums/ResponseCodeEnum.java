@@ -16,7 +16,8 @@ public enum ResponseCodeEnum {
     CODE_601(601, "信息已经存在"),
     CODE_500(500, "服务器返回错误，请联系管理员"),
     CODE_901(901, "登陆超时，请重新登陆"),
-    CODE_904(904, "网盘空间不足，请扩容");
+    CODE_904(904, "网盘空间不足，请扩容"),
+    CODE_902(902, "分享不存在或者已经过期");
 
     private final Integer code;
 
