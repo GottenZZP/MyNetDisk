@@ -17,5 +17,5 @@ public class SysSettingsDto implements Serializable {
 
     private String registerEmailContent = "欢迎注册MyNetDisk, 您的验证码为: %s, 请在15分钟内完成验证";
 
-    private Integer userInitUseSpace = 5242880;
+    private Integer userInitUseSpace = 1024;
 }
