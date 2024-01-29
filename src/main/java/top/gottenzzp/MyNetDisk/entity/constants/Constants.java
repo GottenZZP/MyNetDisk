@@ -33,4 +33,5 @@ public class Constants {
     public static final String ZERO_STR = "0";
     public static final String REDIS_KEY_DOWNLOAD = "mynetdisk:download:";
     public static final Integer LENGTH_50 = 50;
+    public static final String SESSION_SHARE_KEY = "session_share_key_";
 }

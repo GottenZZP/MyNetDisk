@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.gottenzzp.MyNetDisk.entity.constants.Constants;
+import top.gottenzzp.MyNetDisk.entity.dto.SessionShareDto;
 import top.gottenzzp.MyNetDisk.entity.dto.SessionWebUserDto;
 import top.gottenzzp.MyNetDisk.entity.enums.ResponseCodeEnum;
 import top.gottenzzp.MyNetDisk.entity.vo.PaginationResultVO;
@@ -121,5 +122,9 @@ public class ABaseController {
         // 获取session中的用户信息
         SessionWebUserDto sessionWebUserDto = (SessionWebUserDto) session.getAttribute(Constants.SESSION_KEY);
         return sessionWebUserDto;
+    }
+
+    protected SessionShareDto getSessionShareFromSession(HttpSession session, String shareId) {
+        return (SessionShareDto) session.getAttribute(Constants.SESSION_SHARE_KEY + shareId);
     }
 }

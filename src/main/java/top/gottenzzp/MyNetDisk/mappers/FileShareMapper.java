@@ -32,4 +32,6 @@ public interface FileShareMapper<T,P> extends BaseMapper<T,P> {
 	 * @param userId   用户id
 	 */
 	Integer batchDeletionSharedFiles(@Param("shareIds") String[] shareIds, @Param("userId") String userId);
+
+    void updateShareShowCount(@Param("shareId") String shareId);
 }

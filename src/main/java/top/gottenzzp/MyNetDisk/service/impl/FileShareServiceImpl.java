@@ -8,6 +8,7 @@ import javax.annotation.Resource;
 import org.springframework.stereotype.Service;
 
 import top.gottenzzp.MyNetDisk.entity.constants.Constants;
+import top.gottenzzp.MyNetDisk.entity.dto.SessionShareDto;
 import top.gottenzzp.MyNetDisk.entity.enums.PageSize;
 import top.gottenzzp.MyNetDisk.entity.enums.ResponseCodeEnum;
 import top.gottenzzp.MyNetDisk.entity.enums.ShareValidTypeEnums;
@@ -174,4 +175,26 @@ public class FileShareServiceImpl implements FileShareService {
 			throw new BusinessException(ResponseCodeEnum.CODE_600);
 		}
 	}
+
+    @Override
+    public SessionShareDto checkShareCode(String shareId, String code) {
+		// 根据shareId获取分享信息，若分享信息不存在或者已过期，则抛出异常
+		FileShare share = fileShareMapper.selectByShareId(shareId);
+		if (null == share || (share.getExpireTime() != null && new Date().after(share.getExpireTime()))) {
+			throw new BusinessException(ResponseCodeEnum.CODE_902);
+		}
+		// 若提取码不正确，则抛出异常
+		if (!share.getCode().equals(code)) {
+			throw new BusinessException("提取码错误");
+		}
+
+		//更新浏览次数(直接在数据库层面进行浏览量+1可以应对并行情况，防止脏数据)
+		this.fileShareMapper.updateShareShowCount(shareId);
+		SessionShareDto shareSessionDto = new SessionShareDto();
+		shareSessionDto.setShareId(shareId);
+		shareSessionDto.setShareUserId(share.getUserId());
+		shareSessionDto.setFileId(share.getFileId());
+		shareSessionDto.setExpireTime(share.getExpireTime());
+		return shareSessionDto;
+    }
 }

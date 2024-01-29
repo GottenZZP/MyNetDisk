@@ -2,6 +2,7 @@ package top.gottenzzp.MyNetDisk.service;
 
 import java.util.List;
 
+import top.gottenzzp.MyNetDisk.entity.dto.SessionShareDto;
 import top.gottenzzp.MyNetDisk.entity.query.FileShareQuery;
 import top.gottenzzp.MyNetDisk.entity.po.FileShare;
 import top.gottenzzp.MyNetDisk.entity.vo.PaginationResultVO;
@@ -72,4 +73,6 @@ public interface FileShareService {
 	void saveShare(FileShare fileShare);
 
 	void batchDeletionSharedFiles(String[] shareIds, String userId);
+
+    SessionShareDto checkShareCode(String shareId, String code);
 }

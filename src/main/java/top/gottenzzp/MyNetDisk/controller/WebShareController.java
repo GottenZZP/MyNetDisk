@@ -4,6 +4,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import top.gottenzzp.MyNetDisk.annotation.GlobalInterceptor;
 import top.gottenzzp.MyNetDisk.annotation.VerifyParam;
+import top.gottenzzp.MyNetDisk.entity.constants.Constants;
+import top.gottenzzp.MyNetDisk.entity.dto.SessionShareDto;
 import top.gottenzzp.MyNetDisk.entity.dto.SessionWebUserDto;
 import top.gottenzzp.MyNetDisk.entity.enums.FileDelFlagEnums;
 import top.gottenzzp.MyNetDisk.entity.enums.ResponseCodeEnum;
@@ -30,7 +32,7 @@ import java.util.Date;
  * @description: 外部分享类
  */
 @RestController("WebShareController")
-@RequestMapping("/whowShare")
+@RequestMapping("/showShare")
 public class WebShareController extends CommonFileController {
     @Resource
     private FileShareService fileShareService;
@@ -40,6 +42,31 @@ public class WebShareController extends CommonFileController {
 
     @Resource
     private UserInfoService userInfoService;
+
+    /**
+     * 获取分享登录信息
+     *
+     * @param session 会话
+     * @param shareId 共有id
+     * @return {@link ResponseVO}
+     */
+    @RequestMapping("/getShareLoginInfo")
+    @GlobalInterceptor(checkParams = true, checkLogin = false)
+    public ResponseVO getShareLoginInfo(HttpSession session, @VerifyParam(required = true) String shareId) {
+        SessionShareDto shareSessionDto = getSessionShareFromSession(session, shareId);
+        if (shareSessionDto == null) {
+            return getSuccessResponseVO(null);
+        }
+        ShareInfoVO shareInfoVO = getShareInfoCommon(shareId);
+        //判断是否是当前用户分享的文件
+        SessionWebUserDto userDto = getUserInfoFromSession(session);
+        if (userDto != null && userDto.getUserId().equals(shareSessionDto.getShareUserId())) {
+            shareInfoVO.setCurrentUser(true);
+        } else {
+            shareInfoVO.setCurrentUser(false);
+        }
+        return getSuccessResponseVO(shareInfoVO);
+    }
 
     @RequestMapping("/getShareInfo")
     @GlobalInterceptor(checkParams = true, checkLogin = false)
@@ -65,5 +92,23 @@ public class WebShareController extends CommonFileController {
         shareInfoVO.setAvatar(userInfo.getQqAvatar());
         shareInfoVO.setUserId(userInfo.getUserId());
         return shareInfoVO;
+    }
+
+    /**
+     * 检查分享提取码
+     *
+     * @param session 会话
+     * @param shareId 共有id
+     * @param code    密码
+     * @return {@link ResponseVO}
+     */
+    @RequestMapping("/checkShareCode")
+    @GlobalInterceptor(checkLogin = false, checkParams = true)
+    public ResponseVO checkShareCode(HttpSession session,
+                                     @VerifyParam(required = true) String shareId,
+                                     @VerifyParam(required = true) String code) {
+        SessionShareDto shareSessionDto = fileShareService.checkShareCode(shareId, code);
+        session.setAttribute(Constants.SESSION_SHARE_KEY + shareId, shareSessionDto);
+        return getSuccessResponseVO(null);
     }
 }
