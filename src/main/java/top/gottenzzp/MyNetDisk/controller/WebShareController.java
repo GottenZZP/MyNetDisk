@@ -1,5 +1,6 @@
 package top.gottenzzp.MyNetDisk.controller;
 
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import top.gottenzzp.MyNetDisk.annotation.GlobalInterceptor;
@@ -25,6 +26,8 @@ import top.gottenzzp.MyNetDisk.utils.CopyTools;
 import top.gottenzzp.MyNetDisk.utils.StringTools;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.util.Date;
 
@@ -169,5 +172,87 @@ public class WebShareController extends CommonFileController {
         }
         // 返回分享信息
         return shareSessionDto;
+    }
+
+    /**
+     * 获取文件夹信息
+     *
+     * @param session 会话
+     * @param shareId 共有id
+     * @param path    路径
+     * @return {@link ResponseVO}
+     */
+    @RequestMapping("/getFolderInfo")
+    @GlobalInterceptor(checkLogin = false, checkParams = true)
+    public ResponseVO getFolderInfo(HttpSession session,
+                                    @VerifyParam(required = true) String shareId,
+                                    @VerifyParam(required = true) String path) {
+        SessionShareDto shareSessionDto = checkShare(session, shareId);
+        return super.getFolderInfo(path, shareSessionDto.getShareUserId());
+    }
+
+    /**
+     * 获取文件
+     *
+     * @param response 响应
+     * @param session  会话
+     * @param shareId  分享id
+     * @param fileId   文件id
+     */
+    @RequestMapping("/getFile/{shareId}/{fileId}")
+    public void getFile(HttpServletResponse response, HttpSession session,
+                        @PathVariable("shareId") @VerifyParam(required = true) String shareId,
+                        @PathVariable("fileId") @VerifyParam(required = true) String fileId) {
+        SessionShareDto shareSessionDto = checkShare(session, shareId);
+        super.getFile(response, fileId, shareSessionDto.getShareUserId());
+    }
+
+    /**
+     * 获取视频信息
+     *
+     * @param response 响应
+     * @param session  会话
+     * @param shareId  分享id
+     * @param fileId   文件id
+     */
+    @RequestMapping("/ts/getVideoInfo/{shareId}/{fileId}")
+    public void getVideoInfo(HttpServletResponse response,
+                             HttpSession session,
+                             @PathVariable("shareId") @VerifyParam(required = true) String shareId,
+                             @PathVariable("fileId") @VerifyParam(required = true) String fileId) {
+        SessionShareDto shareSessionDto = checkShare(session, shareId);
+        super.getFile(response, fileId, shareSessionDto.getShareUserId());
+    }
+
+    /**
+     * 创建下载url
+     *
+     * @param session 会话
+     * @param shareId 分享id
+     * @param fileId  文件id
+     * @return {@link ResponseVO}
+     */
+    @RequestMapping("/createDownloadUrl/{shareId}/{fileId}")
+    @GlobalInterceptor(checkLogin = false, checkParams = true)
+    public ResponseVO createDownloadUrl(HttpSession session,
+                                        @PathVariable("shareId") @VerifyParam(required = true) String shareId,
+                                        @PathVariable("fileId") @VerifyParam(required = true) String fileId) {
+        SessionShareDto shareSessionDto = checkShare(session, shareId);
+        return super.createDownloadUrl(fileId, shareSessionDto.getShareUserId());
+    }
+
+    /**
+     * 下载
+     *
+     * @param request  请求
+     * @param response 响应
+     * @param code     密码
+     * @throws Exception 异常
+     */
+    @RequestMapping("/download/{code}")
+    @GlobalInterceptor(checkLogin = false, checkParams = true)
+    public void download(HttpServletRequest request, HttpServletResponse response,
+                         @PathVariable("code") @VerifyParam(required = true) String code) throws Exception {
+        super.download(request, response, code);
     }
 }
