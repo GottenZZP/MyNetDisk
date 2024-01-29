@@ -156,4 +156,6 @@ public interface FileInfoService {
 	Long getUserUseSpace(@Param("userId") String userId);
 
     void checkRootFilePid(String rootFilePid, String userId, String fileId);
+
+	void saveShare(String shareRootFilePid, String shareFileIds, String myFolderId, String shareUserId, String cureentUserId);
 }
