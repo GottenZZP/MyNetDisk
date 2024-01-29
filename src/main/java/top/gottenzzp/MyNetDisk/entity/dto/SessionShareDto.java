@@ -15,8 +15,20 @@ import java.util.Date;
 @Getter
 @Setter
 public class SessionShareDto {
+    /**
+     * 分享Id
+     */
     private String shareId;
+    /**
+     * 分享人Id
+     */
     private String shareUserId;
+    /**
+     * 分享失效时间
+     */
     private Date expireTime;
+    /**
+     * 文件id
+     */
     private String fileId;
 }

@@ -12,6 +12,9 @@ import top.gottenzzp.MyNetDisk.entity.enums.ResponseCodeEnum;
 import top.gottenzzp.MyNetDisk.entity.po.FileInfo;
 import top.gottenzzp.MyNetDisk.entity.po.FileShare;
 import top.gottenzzp.MyNetDisk.entity.po.UserInfo;
+import top.gottenzzp.MyNetDisk.entity.query.FileInfoQuery;
+import top.gottenzzp.MyNetDisk.entity.vo.FileInfoVO;
+import top.gottenzzp.MyNetDisk.entity.vo.PaginationResultVO;
 import top.gottenzzp.MyNetDisk.entity.vo.ResponseVO;
 import top.gottenzzp.MyNetDisk.entity.vo.ShareInfoVO;
 import top.gottenzzp.MyNetDisk.exception.BusinessException;
@@ -19,6 +22,7 @@ import top.gottenzzp.MyNetDisk.service.FileInfoService;
 import top.gottenzzp.MyNetDisk.service.FileShareService;
 import top.gottenzzp.MyNetDisk.service.UserInfoService;
 import top.gottenzzp.MyNetDisk.utils.CopyTools;
+import top.gottenzzp.MyNetDisk.utils.StringTools;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
@@ -110,5 +114,60 @@ public class WebShareController extends CommonFileController {
         SessionShareDto shareSessionDto = fileShareService.checkShareCode(shareId, code);
         session.setAttribute(Constants.SESSION_SHARE_KEY + shareId, shareSessionDto);
         return getSuccessResponseVO(null);
+    }
+
+    /**
+     * 加载文件列表
+     *
+     * @param session 会话
+     * @param shareId 分享id
+     * @param filePid 要查看的文件目录
+     * @return {@link ResponseVO}
+     */
+    @RequestMapping("/loadFileList")
+    @GlobalInterceptor(checkLogin = false, checkParams = true)
+    public ResponseVO loadFileList(HttpSession session,
+                                   @VerifyParam(required = true) String shareId, String filePid) {
+        // 检查分享是否失效
+        SessionShareDto shareSessionDto = checkShare(session, shareId);
+        FileInfoQuery query = new FileInfoQuery();
+        // 如果文件目录不为空且不为根目录
+        if (!StringTools.isEmpty(filePid) && !Constants.ZERO_STR.equals(filePid)) {
+            // 检查接口要查看文件是否在所分享的文件根目录下
+            fileInfoService.checkRootFilePid(shareSessionDto.getFileId(), shareSessionDto.getShareUserId(), filePid);
+            // 到这步没报异常说明要查看的文件是在分享的文件根目录下，则设置搜索的文件父id为filePid
+            query.setFilePid(filePid);
+        } else {
+            // 否则直接设置搜索的文件id为分享的文件id
+            query.setFileId(shareSessionDto.getFileId());
+        }
+        // 搜索文件并返回
+        query.setUserId(shareSessionDto.getShareUserId());
+        query.setOrderBy("last_update_time desc");
+        query.setDelFlag(FileDelFlagEnums.USING.getFlag());
+        PaginationResultVO resultVO = fileInfoService.findListByPage(query);
+        return getSuccessResponseVO(convert2PaginationVO(resultVO, FileInfoVO.class));
+    }
+
+    /**
+     * 检查分享是否失效
+     *
+     * @param session 会话
+     * @param shareId 共有id
+     * @return {@link SessionShareDto}
+     */
+    private SessionShareDto checkShare(HttpSession session, String shareId) {
+        // 获取分享信息
+        SessionShareDto shareSessionDto = getSessionShareFromSession(session, shareId);
+        // 如果分享不存在
+        if (shareSessionDto == null) {
+            throw new BusinessException(ResponseCodeEnum.CODE_903);
+        }
+        // 或者分享已经过期，则抛出异常
+        if (shareSessionDto.getExpireTime() != null && new Date().after(shareSessionDto.getExpireTime())) {
+            throw new BusinessException(ResponseCodeEnum.CODE_902);
+        }
+        // 返回分享信息
+        return shareSessionDto;
     }
 }

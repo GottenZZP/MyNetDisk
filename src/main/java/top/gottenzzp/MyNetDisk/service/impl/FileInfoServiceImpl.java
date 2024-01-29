@@ -581,6 +581,45 @@ public class FileInfoServiceImpl implements FileInfoService {
     }
 
     /**
+     * 检查fileId是否是分享的根目录下的文件
+     *
+     * @param rootFilePid 分享的根文件id
+     * @param userId      用户id
+     * @param fileId      接口传来的要看的文件id
+     */
+    @Override
+    public void checkRootFilePid(String rootFilePid, String userId, String fileId) {
+        // 如果接口传来的文件id为空，则抛出异常
+        if (StringTools.isEmpty(fileId)) {
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        // 如果接口传来的文件id和分享的根文件id相同，则表示是根目录，直接返回
+        if (rootFilePid.equals(fileId)) {
+            return;
+        }
+        // 否则递归检查该文件的父级目录是否是分享的根目录，防止用户通过接口传来的文件id不是分享的根目录下的文件
+        checkFilePid(rootFilePid, fileId, userId);
+    }
+
+    private void checkFilePid(String rootFilePid, String fileId, String userId) {
+        // 如果该用户下直接搜不到该文件，则抛出异常
+        FileInfo fileInfo = this.fileInfoMapper.selectByFileIdAndUserId(fileId, userId);
+        if (fileInfo == null) {
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        // 如果该文件的父级目录是该用户的根目录，直接返回（不允许分享根目录）
+        if (Constants.ZERO_STR.equals(fileInfo.getFilePid())) {
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        // 如果该文件的父级目录是分享的根目录，则表示是分享的根目录下的文件，直接返回
+        if (fileInfo.getFilePid().equals(rootFilePid)) {
+            return;
+        }
+        // 否则递归检查该文件的父级目录是否是分享的根目录
+        checkFilePid(rootFilePid, fileInfo.getFilePid(), userId);
+    }
+
+    /**
      * 获取fileId下的所有子文件夹
      *
      * @param delFilePidList 删除文件pid列表

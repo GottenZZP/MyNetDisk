@@ -154,4 +154,6 @@ public interface FileInfoService {
 	void delFileBatch(String userId, String fileIds, Boolean adminOp);
 
 	Long getUserUseSpace(@Param("userId") String userId);
+
+    void checkRootFilePid(String rootFilePid, String userId, String fileId);
 }
